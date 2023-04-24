@@ -1,0 +1,1 @@
+node_modules/.bin/electron-packager . --platform=win32 --arch=x64 --out="/Users/loganlin/Downloads/pgmanager-dist" --overwrite --icon="instance/favicon.ico"

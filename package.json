@@ -1,0 +1,22 @@
+{
+    "name": "promptgenius-backend",
+    "version": "0.0.1",
+    "description": "Backend for PromptGenius",
+    "main": "main.js",
+    "author": "Yan Lin",
+    "devDependencies": {
+        "electron": "^24.1.2",
+        "electron-packager": "^17.1.1",
+        "electron-reload": "^2.0.0-alpha.1"
+    },
+    "scripts": {
+        "start": "electron .",
+        "dev": "NODE_ENV=development electron ."
+    },
+    "dependencies": {
+        "moment": "^2.29.4",
+        "path": "^0.12.7",
+        "sqlite3": "^5.1.6",
+        "ssh2": "^1.11.0"
+    }
+}

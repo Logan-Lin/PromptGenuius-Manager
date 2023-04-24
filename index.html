@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!-- https://developer.mozilla.org/zh-CN/docs/Web/HTTP/CSP -->
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'"> -->
+    <title>PromptGenius management system</title>
+
+    <link rel="stylesheet" href="module/mdui/css/mdui.css">
+    <script src="module/jquery.js"></script>
+</head>
+
+<body class="mdui-color-grey-700 mdui-appbar-with-toolbar">
+    <header class="appbar mdui-appbar mdui-appbar-fixed mdui-color-grey-900 mdui-shadow-4">
+        <div class="mdui-toolbar">
+            <button class="mdui-btn mdui-btn-icon" id="drawer-btn">
+                <i class="mdui-icon material-icons">menu</i>
+            </button>
+            <a class="mdui-typo-headline">PromptGenius Manager</a>
+            <div class="mdui-toolbar-spacer"></div>
+            <button class="mdui-btn mdui-btn-icon" id="save-cache-btn" mdui-tooltip="{content: 'Save to cache'}">
+                <i class="mdui-icon material-icons">save</i>
+            </button>
+            <button class="mdui-btn mdui-btn-icon" id="download-db-btn" mdui-tooltip="{content: 'Download from DB'}">
+                <i class="mdui-icon material-icons">file_download</i>
+            </button>
+            <button class="mdui-btn mdui-btn-icon" id="upload-db-btn" mdui-tooltip="{content: 'Upload changes'}">
+                <i class="mdui-icon material-icons">file_upload</i>
+            </button>
+        </div>
+    </header>
+
+    <div class="mdui-drawer mdui-color-grey-200 mdui-drawer-close" id="left-drawer">
+        <ul class="mdui-list"></ul>
+    </div>
+
+    <div class="mdui-container mdui-m-t-2 switch-containers" id="overview-container">
+        <div class="mdui-row">
+            <div class="mdui-card">
+                <div class="mdui-card-primary">
+                    <div class="mdui-row mdui-p-x-2">
+                        <span class="mdui-typo-headline">Statistics</span>
+                        <select class="mdui-select mdui-float-right language-select"></select>
+                    </div>
+                </div>
+                <div class="mdui-card-content">
+                    <ul class="mdui-list" id="overview-stat-list"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdui-container mdui-m-t-2 switch-containers" id="languages-container">
+        <div class="mdui-row" id="languages-row"></div>
+    </div>
+
+    <div class="mdui-container mdui-m-t-2 switch-containers" id="index-container">
+        <div class="mdui-row">
+            <div class="mdui-card">
+                <div class="mdui-card-primary">
+                    <div class="mdui-row mdui-p-x-2"> <span class="mdui-typo-headline">Language</span>
+                        <select class="mdui-select mdui-float-right language-select"></select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdui-container mdui-m-t-2 switch-containers" id="classes-container">
+        <div class="mdui-row">
+            <div class="mdui-card">
+                <div class="mdui-card-primary">
+                    <div class="mdui-row mdui-p-x-2">
+                        <span class="mdui-typo-headline">Language</span>
+                        <select class="mdui-select mdui-float-right language-select"></select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mdui-row mdui-m-t-2">
+            <div class="mdui-card">
+                <div class="mdui-card-primary">
+                    <div class="mdui-card-primary-title">Edit Classes</div>
+                </div>
+                <div class="mdui-card-content">
+                    <div class="mdui-panel" id="classes-panel" mdui-panel></div>
+                </div>
+                <div class="mdui-card-actions">
+                    <button class="mdui-btn mdui-ripple mdui-float-right" id="add-class-btn">Add Class</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdui-container mdui-m-t-2 switch-containers" id="functions-container">
+        <div class="mdui-row">
+            <div class="mdui-card">
+                <div class="mdui-card-primary">
+                    <div class="mdui-row mdui-p-x-2">
+                        <span class="mdui-typo-headline">Language</span>
+                        <select class="mdui-select mdui-float-right language-select"></select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mdui-row mdui-m-t-2">
+            <div class="mdui-card">
+                <div class="mdui-card-primary">
+                    <div class="mdui-card-primary-title">Edit Functions</div>
+                </div>
+                <div class="mdui-card-content">
+                    <div class="mdui-panel" id="function-panel" mdui-panel></div>
+                </div>
+                <div class="mdui-card-actions">
+                    <button class="mdui-btn mdui-ripple mdui-float-right" id="add-function-btn">Add Function</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdui-container mdui-m-t-2 switch-containers" id="submits-container">
+        <div class="mdui-row mdui-m-t-2">
+            <div class="mdui-card">
+                <div class="mdui-card-primary">
+                    <div class="mdui-card-primary-title">View User Submits</div>
+                </div>
+                <div class="mdui-card-content">
+                    <div class="mdui-panel" id="submit-panel" mdui-panel></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdui-container mdui-m-t-2 switch-containers" id="settings-container">
+        <div class="mdui-row mdui-m-t-2">
+            <div class="mdui-card">
+                <div class="mdui-card-content">
+                    <div class="mdui-row">
+                        <div class="mdui-col-xs-8">
+                            <div class="mdui-textfield mdui-textfield-floating-label">
+                                <i class="mdui-icon material-icons">storage</i>
+                                <label class="mdui-textfield-label">Host</label>
+                                <input class="mdui-textfield-input" id="host-input" type="text" />
+                            </div>
+                        </div>
+                        <div class="mdui-col-xs-4">
+                            <div class="mdui-textfield mdui-textfield-floating-label">
+                                <label class="mdui-textfield-label">Port</label>
+                                <input class="mdui-textfield-input" id="port-input" type="text" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mdui-textfield mdui-textfield-floating-label">
+                        <i class="mdui-icon material-icons">perm_media</i>
+                        <label class="mdui-textfield-label">Path to database</label>
+                        <input class="mdui-textfield-input" id="path-input" type="text" />
+                    </div>
+                    <div class="mdui-textfield mdui-textfield-floating-label">
+                        <i class="mdui-icon material-icons">account_circle</i>
+                        <label class="mdui-textfield-label">Username</label>
+                        <input class="mdui-textfield-input" id="username-input" type="text" />
+                    </div>
+                    <div class="mdui-textfield mdui-textfield-floating-label">
+                        <i class="mdui-icon material-icons">lock</i>
+                        <label class="mdui-textfield-label">Password</label>
+                        <input class="mdui-textfield-input" id="password-input" type="password" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+<script src="./module/mdui/js/mdui.js"></script>
+<script src="./generator.js"></script>
+<script src="./render.js"></script>
+
+</html>
