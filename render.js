@@ -18,7 +18,6 @@ function render_overview_page() {
         })
     ).then((stat_lists) => {
         render_language_selects();
-        $('#overview-stat-list').text('');
         stat_lists.forEach((list) => {
             $('#overview-stat-list').append(list);
         })
@@ -27,7 +26,6 @@ function render_overview_page() {
 
 function render_languages_page() {
     window.ipcRenderer.invoke('fetch-tables', 'languages').then(languages => {
-        $('#languages-row').text('');
         $('#languages-row').append(gen_edit_table_card('Manage Website Languages'));
         languages.forEach((row) => {
             $('#languages-row .edit-tbody').append(gen_code_name_tr(row.code, row.name));
@@ -50,7 +48,6 @@ function render_index_page() {
         })
     ).then((cards) => {
         render_language_selects();
-        $('.index-content-edit-row').remove();
         cards.forEach((card) => {
             $('#index-container').append($(`<div class="mdui-row index-content-edit-row mdui-m-y-2">`).append(card));
         })
@@ -73,7 +70,6 @@ function render_classes_page() {
             return gen_class_panel(ID, class_name, icon, icon_style, childs);
         })).then((panels) => {
             render_language_selects();
-            $('#classes-panel').text('');
             panels.forEach((list) => {
                 $('#classes-panel').append(list);
             })
@@ -95,7 +91,6 @@ function render_functions_page() {
             return gen_function_panel(ID, function_name, class_tags);
         })).then((panels) => {
             render_language_selects();
-            $('#function-panel').text('');
             panels.forEach((panels) => {
                 $('#function-panel').append(panels);
             })
@@ -106,7 +101,6 @@ function render_functions_page() {
 
 function render_submits_page() {
     window.ipcRenderer.invoke('fetch-tables', 'user_submit_function').then((submits) => {
-        $('#submit-panel').text('');
         submits.forEach(({ funcDesc, createTime, promptContent, userName }) => {
             $('#submit-panel').append(gen_submit_panel(funcDesc, createTime, promptContent, userName));
         })
@@ -119,6 +113,15 @@ function render_settings_page() {
     $('#path-input').val(localStorage.getItem('path'));
     $('#username-input').val(localStorage.getItem('username'));
     $('#password-input').val(localStorage.getItem('password'));
+}
+
+function clear_all_pages() {
+    $('#overview-stat-list').text('');
+    $('#languages-row').text('');
+    $('.index-content-edit-row').remove();
+    $('#classes-panel').text('');
+    $('#function-panel').text('');
+    $('#submit-panel').text('');
 }
 
 function render_language_selects() {
@@ -165,6 +168,7 @@ function render_left_drawer() {
 // Control functions
 function switch_displayed_page() {
     $('.switch-containers').addClass('mdui-hidden');
+    clear_all_pages();
     $(`#${cur_page}-container`).removeClass('mdui-hidden');
     window[`render_${cur_page}_page`]();
 }

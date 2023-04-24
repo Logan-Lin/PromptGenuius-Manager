@@ -253,6 +253,50 @@ function gen_prompt_panel(prompt_id, priority, model, content, author, author_li
     return panel;
 }
 
+function pop_class_choice_dialog(class_click_listenser, dialog_close_listener) {
+    window.ipcRenderer.invoke('fetch-lan-contents', 'class_names', lan_code).then((classes) => {
+        var class_choice_dialog = $(`
+                <div class="mdui-dialog">
+                    <div class="mdui-dialog-title">
+                        <div class="mdui-row">
+                            <span class="mdui-typo-title">Choice class</span>
+                            <button class="mdui-btn mdui-btn-icon mdui-float-right" 
+                                id="class-choice-dialog-close-btn">
+                                <i class="mdui-icon material-icons">close</i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mdui-dialog-content">
+                        <ul class="mdui-list mdui-list-dense mdui-row-sm-2 mdui-row-md-3 mdui-row-lg-4 mdui-row-xl-5" 
+                            id="class-choice-list"></ul>
+                    </div>
+                </div>
+            `);
+        var mdui_dialog = new mdui.Dialog(class_choice_dialog);
+
+        classes.forEach(({ ID, name }) => {
+            var class_choice_list_item = $(`
+                    <li class="mdui-list-item mdui-ripple mdui-col card-choice-list-item">
+                        <div class="mdui-list-item-content card-choice-list-item-content" class-id="${ID}">${name}</div>
+                    </li>
+                `);
+            class_choice_dialog.find('#class-choice-list').append(class_choice_list_item);
+            class_choice_list_item.on('click', (event) => {
+                var target = $(event.target);
+                class_click_listenser(target);
+                mdui_dialog.close();
+            });
+        });
+
+        class_choice_dialog.find('#class-choice-dialog-close-btn').on('click', () => {
+            dialog_close_listener();
+            mdui_dialog.close()
+        });
+        mdui_dialog.open();
+    });
+
+}
+
 function gen_function_panel(function_id, function_name, class_tags) {
     var panel = $(`
         <div class="mdui-panel-item">
@@ -304,42 +348,9 @@ function gen_function_panel(function_id, function_name, class_tags) {
 
     // Open a dialog for adding class tags.
     add_class_tag_chip.on('click', () => {
-        window.ipcRenderer.invoke('fetch-lan-contents', 'class_names', lan_code).then((classes) => {
-            var class_choice_dialog = $(`
-                <div class="mdui-dialog">
-                    <div class="mdui-dialog-title">
-                        <div class="mdui-row">
-                            <span class="mdui-typo-title">Choice class</span>
-                            <button class="mdui-btn mdui-btn-icon mdui-float-right" 
-                                id="class-choice-dialog-close-btn">
-                                <i class="mdui-icon material-icons">close</i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="mdui-dialog-content">
-                        <ul class="mdui-list mdui-list-dense mdui-row-sm-2 mdui-row-md-3 mdui-row-lg-4 mdui-row-xl-5" 
-                            id="class-choice-list"></ul>
-                    </div>
-                </div>
-            `);
-            var mdui_dialog = new mdui.Dialog(class_choice_dialog);
-
-            classes.forEach(({ ID, name }) => {
-                var class_choice_list_item = $(`
-                    <li class="mdui-list-item mdui-ripple mdui-col card-choice-list-item">
-                        <div class="mdui-list-item-content" class-id="${ID}">${name}</div>
-                    </li>
-                `);
-                class_choice_dialog.find('#class-choice-list').append(class_choice_list_item);
-                class_choice_list_item.on('click', () => {
-                    gen_class_tag_chip(ID, name).insertBefore(add_class_tag_chip);
-                    mdui_dialog.close();
-                });
-            });
-
-            class_choice_dialog.find('#class-choice-dialog-close-btn').on('click', () => { mdui_dialog.close() });
-            mdui_dialog.open();
-        });
+        pop_class_choice_dialog((target) => {
+            gen_class_tag_chip(target.attr('class-id'), target.text()).insertBefore(add_class_tag_chip);
+        }, () => { })
     });
 
     var prompt_panels = $(`
@@ -364,6 +375,56 @@ function gen_function_panel(function_id, function_name, class_tags) {
     })
 
     return panel;
+}
+
+function pop_function_choice_dialog(lan_code, function_click_listener, dialog_close_listener) {
+    window.ipcRenderer.invoke('fetch-tables', 'functions').then((functions) => {
+        var function_choice_dialog = $(`
+                    <div class="mdui-dialog">
+                        <div class="mdui-dialog-title">
+                            <div class="mdui-row">
+                                <span class="mdui-typo-title">Choice functions</span>
+                                <button class="mdui-btn mdui-btn-icon mdui-float-right" 
+                                    id="function-choice-dialog-close-btn">
+                                    <i class="mdui-icon material-icons">close</i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mdui-dialog-content">
+                            <ul class="mdui-list mdui-list-dense mdui-row-sm-2 mdui-row-md-3 mdui-row-lg-4 mdui-row-xl-5" 
+                                id="function-choice-list"></ul>
+                        </div>
+                    </div>
+                `);
+        var mdui_dialog = new mdui.Dialog(function_choice_dialog);
+
+        Promise.all(functions.map(async ({ ID }) => {
+            return {
+                id: ID,
+                name: await window.ipcRenderer.invoke('fetch-name-with-ID', 'function_names', ID, lan_code)
+            }
+        })).then((function_names) => {
+            function_names.forEach(({ id, name }) => {
+                var function_list = $(`
+                            <li class="mdui-list-item mdui-ripple mdui-col card-choice-list-item">
+                                <div class="mdui-list-item-content" function-id="${id}">${name || id}</div>
+                            </li>
+                        `);
+                function_choice_dialog.find('#function-choice-list').append(function_list);
+
+                function_list.on('click', (event) => {
+                    function_click_listener($(event.target));
+                    mdui_dialog.close();
+                });
+            })
+            mdui_dialog.open();
+        })
+
+        function_choice_dialog.find('#function-choice-dialog-close-btn').on('click', () => {
+            dialog_close_listener();
+            mdui_dialog.close();
+        });
+    })
 }
 
 function gen_submit_panel(func_desc, create_time, prompt_content, user_name) {
@@ -454,59 +515,20 @@ function gen_submit_panel(func_desc, create_time, prompt_content, user_name) {
         submit_funcid_input.prop('disabled', !event.target.checked);
 
         if (!event.target.checked) {
-            window.ipcRenderer.invoke('fetch-tables', 'functions').then((functions) => {
-                var function_choice_dialog = $(`
-                    <div class="mdui-dialog">
-                        <div class="mdui-dialog-title">
-                            <div class="mdui-row">
-                                <span class="mdui-typo-title">Choice functions</span>
-                                <button class="mdui-btn mdui-btn-icon mdui-float-right" 
-                                    id="function-choice-dialog-close-btn">
-                                    <i class="mdui-icon material-icons">close</i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="mdui-dialog-content">
-                            <ul class="mdui-list mdui-list-dense mdui-row-sm-2 mdui-row-md-3 mdui-row-lg-4 mdui-row-xl-5" 
-                                id="function-choice-list"></ul>
-                        </div>
-                    </div>
-                `);
-                var mdui_dialog = new mdui.Dialog(function_choice_dialog);
-                var checked_lan_code = language_form.find('input[name=language-ratio-group]:checked').val();
-
-                Promise.all(functions.map(async ({ ID }) => {
-                    return {
-                        id: ID,
-                        name: await window.ipcRenderer.invoke('fetch-name-with-ID', 'function_names', ID, checked_lan_code)
-                    }
-                })).then((function_names) => {
-                    function_names.forEach(({ id, name }) => {
-                        var function_list = $(`
-                            <li class="mdui-list-item mdui-ripple mdui-col card-choice-list-item">
-                                <div class="mdui-list-item-content" function-id="${id}">${name || id}</div>
-                            </li>
-                        `);
-                        function_choice_dialog.find('#function-choice-list').append(function_list);
-
-                        function_list.on('click', () => {
-                            submit_funcdesc = submit_funcdesc_input.val();
-                            submit_funcid = submit_funcid_input.val();
-                            submit_funcdesc_input.val(name || '');
-                            submit_funcid_input.val(id);
-                            mdui_dialog.close();
-                        });
-                    })
-                    mdui_dialog.open();
-                })
-
-                function_choice_dialog.find('#function-choice-dialog-close-btn').on('click', () => {
+            var checked_lan_code = language_form.find('input[name=language-ratio-group]:checked').val();
+            pop_function_choice_dialog(
+                checked_lan_code,
+                (target) => {
+                    submit_funcid = submit_funcid_input.val();
+                    submit_funcdesc = submit_funcdesc_input.val();
+                    submit_funcid_input.val(target.attr('function-id'));
+                    submit_funcdesc_input.val(target.text());
+                },
+                () => {
                     $(event.target).prop('checked', true);
                     panel_body.find('.submit-funcdesc-input').prop('disabled', false);
                     panel_body.find('.submit-funcid-input').prop('disabled', false);
-                    mdui_dialog.close();
                 });
-            })
         } else {
             submit_funcdesc_input.val(submit_funcdesc);
             submit_funcid_input.val(submit_funcid);
