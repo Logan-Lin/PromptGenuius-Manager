@@ -1,6 +1,9 @@
 const left_drawer = new mdui.Drawer('#left-drawer');
 var lan_code = localStorage.getItem('lan') || 'eng';
 var cur_page = localStorage.getItem('page') || 'overview';
+const local_db_path = './instance/PromptGenius.db'
+const download_confirm_dialog = new mdui.Dialog($('#download-confirm-dialog'));
+const upload_confirm_dialog = new mdui.Dialog($('#upload-confirm-dialog'));
 
 // Functions for render main containers.
 function render_overview_page() {
@@ -182,6 +185,10 @@ function downloaded_listener() {
     mdui.snackbar('Downloaded from remote DB.');
 }
 
+function uploaded_listener() {
+    mdui.snackbar('Uploaded to remote DB.');
+}
+
 // Save listeners
 function save_languages_listener() {
     var languages = [];
@@ -221,40 +228,75 @@ function save_index_listener() {
     })
 }
 
+function save_settings_listener() {
+    localStorage.setItem('host', $('#host-input').val());
+    localStorage.setItem('port', $('#port-input').val());
+    localStorage.setItem('path', $('#path-input').val());
+    localStorage.setItem('username', $('#username-input').val());
+    localStorage.setItem('password', $('#password-input').val());
+}
+
 // Render pages.
-render_left_drawer();
-switch_displayed_page();
+window.ipcRenderer.invoke('reload-db', local_db_path).then(() => {
+    render_left_drawer();
+    switch_displayed_page();
+})
 
 // Link listeners.
 $('#drawer-btn').on('click', () => { left_drawer.toggle(); });
 $('.language-select').on('change', (event) => {
     lan_code = $(event.target).find(':selected').val();
     render_language_selects();
-    window[`render_${cur_page}_page`]();
+    switch_displayed_page();
 
     localStorage.setItem('lan', lan_code);
 });
 $('#save-cache-btn').on('click', () => {
     try {
         window[`save_${cur_page}_listener`]();
+        mdui.snackbar('Saved to local cache.')
     } catch (error) {
         mdui.snackbar('This page do not contain data to save.');
     }
 });
-$('#download-db-btn').on('click', () => {
-    mdui.confirm('Download from DB will discard all changes so far.',
-        () => {
-            window.ipcRenderer.invoke('reload-db').then(() => {
-                init_render_all();
+$('#download-db-btn').on('click', () => { download_confirm_dialog.open() });
+$('#upload-db-btn').on('click', () => { upload_confirm_dialog.open() });
+
+$('#download-cancel-btn').on('click', () => { download_confirm_dialog.close() });
+$('#download-confirm-btn').on('click', () => {
+    $('#download-confirm-dialog .mdui-dialog-actions').addClass('mdui-invisible');
+    $('#download-confirm-dialog-prompt').addClass('mdui-hidden');
+    $('#download-confirm-dialog-progress').removeClass('mdui-hidden');
+    window.ipcRenderer.invoke('download-file',
+        localStorage.getItem('host'), localStorage.getItem('port'),
+        localStorage.getItem('username'), localStorage.getItem('password'),
+        local_db_path, localStorage.getItem('path')).then(() => {
+            window.ipcRenderer.invoke('reload-db', local_db_path).then(() => {
+                download_confirm_dialog.close();
+                $('#download-confirm-dialog .mdui-dialog-actions').removeClass('mdui-invisible');
+                $('#download-confirm-dialog-prompt').removeClass('mdui-hidden');
+                $('#download-confirm-dialog-progress').addClass('mdui-hidden');
+                switch_displayed_page();
                 downloaded_listener();
             })
         })
 });
-$('#upload-db-btn').on('click', () => {
-    mdui.confirm('Upload changes will overwrite current database.',
-        () => {
-        });
-});
+$('#upload-cancel-btn').on('click', () => { upload_confirm_dialog.close() });
+$('#upload-confirm-btn').on('click', () => {
+    $('#upload-confirm-dialog .mdui-dialog-actions').addClass('mdui-hidden');
+    $('#upload-confirm-dialog-prompt').addClass('mdui-hidden');
+    $('#upload-confirm-dialog-progress').removeClass('mdui-hidden');
+    window.ipcRenderer.invoke('upload-file',
+        localStorage.getItem('host'), localStorage.getItem('port'),
+        localStorage.getItem('username'), localStorage.getItem('password'),
+        local_db_path, localStorage.getItem('path')).then(() => {
+            upload_confirm_dialog.close();
+            $('#upload-confirm-dialog .mdui-dialog-actions').removeClass('mdui-hidden');
+            $('#upload-confirm-dialog-prompt').removeClass('mdui-hidden');
+            $('#upload-confirm-dialog-progress').addClass('mdui-hidden');
+            uploaded_listener();
+        })
+})
 
 $('#add-class-btn').on('click', () => {
     $('#classes-panel').append(gen_class_panel('', '', '', '', undefined));
@@ -263,12 +305,4 @@ $('#add-class-btn').on('click', () => {
 $('#add-function-btn').on('click', () => {
     $('#function-panel').append(gen_function_panel('', '', []));
     mdui.mutation();
-})
-
-$('#settings-container input').on('input', () => {
-    localStorage.setItem('host', $('#host-input').val());
-    localStorage.setItem('port', $('#port-input').val());
-    localStorage.setItem('path', $('#path-input').val());
-    localStorage.setItem('username', $('#username-input').val());
-    localStorage.setItem('password', $('#password-input').val());
 })

@@ -253,7 +253,7 @@ function gen_prompt_panel(prompt_id, priority, model, content, author, author_li
     return panel;
 }
 
-function pop_class_choice_dialog(class_click_listenser, dialog_close_listener) {
+function pop_class_choice_dialog(lan_code, class_click_listenser, dialog_close_listener) {
     window.ipcRenderer.invoke('fetch-lan-contents', 'class_names', lan_code).then((classes) => {
         var class_choice_dialog = $(`
                 <div class="mdui-dialog">
@@ -348,9 +348,12 @@ function gen_function_panel(function_id, function_name, class_tags) {
 
     // Open a dialog for adding class tags.
     add_class_tag_chip.on('click', () => {
-        pop_class_choice_dialog((target) => {
-            gen_class_tag_chip(target.attr('class-id'), target.text()).insertBefore(add_class_tag_chip);
-        }, () => { })
+        pop_class_choice_dialog(
+            lan_code,
+            (target) => {
+                gen_class_tag_chip(target.attr('class-id'), target.text()).insertBefore(add_class_tag_chip);
+            },
+            () => { })
     });
 
     var prompt_panels = $(`

@@ -1,13 +1,12 @@
 const sqlite3 = require('sqlite3').verbose();
-const Client = require('ssh2').Client;
+const Client = require('ssh2-sftp-client');
 const fs = require('fs');
 const path = require('path');
 
-const dbFilePath = path.join(__dirname, 'instance', 'PromptGenius.db');
 var db;
 
-function load_db() {
-    db = new sqlite3.Database(dbFilePath, (err) => {
+function load_db(db_path) {
+    db = new sqlite3.Database(db_path, (err) => {
         if (err) {
             console.error('Error connecting to SQLite database:', err);
             return;
@@ -15,64 +14,30 @@ function load_db() {
     });
 }
 
-load_db();
-
-var server_conf = {
-    host: 'your_host',
-    port: 22,
-    username: 'your_username',
-    password: 'your_password',
+async function download_file(server_conf, localFilePath, remoteFilePath) {
+    const sftp = new Client();
+    try {
+        await sftp.connect(server_conf);
+        await sftp.fastGet(remoteFilePath, localFilePath);
+    } catch (err) {
+        console.error(err.message);
+        throw err;
+    } finally {
+        await sftp.end();
+    }
 }
 
-async function upload_file(localFilePath, remoteFilePath) {
-    return new Promise((resolve, reject) => {
-        const conn = new Client();
-        conn.on('ready', () => {
-            conn.sftp((err, sftp) => {
-                if (err) {
-                    conn.end();
-                    reject(err);
-                    return;
-                }
-
-                const readStream = fs.createReadStream(localFilePath);
-                const writeStream = sftp.createWriteStream(remoteFilePath);
-
-                writeStream.on('close', () => {
-                    conn.end();
-                    resolve();
-                });
-
-                readStream.pipe(writeStream);
-            });
-        }).connect(server_conf);
-    });
-}
-
-async function download_file(localFilePath, remoteFilePath) {
-    return new Promise((resolve, reject) => {
-        const conn = new Client();
-        conn.on('ready', () => {
-            conn.sftp((err, sftp) => {
-                if (err) {
-                    conn.end();
-                    reject(err);
-                    return;
-                }
-
-                const readStream = sftp.createReadStream(remoteFilePath);
-                const writeStream = fs.createWriteStream(localFilePath);
-
-                writeStream.on('close', () => {
-                    console.log('File downloaded successfully');
-                    conn.end();
-                    resolve();
-                });
-
-                readStream.pipe(writeStream);
-            });
-        }).connect(server_conf);
-    });
+async function upload_file(server_conf, localFilePath, remoteFilePath) {
+    const sftp = new Client();
+    try {
+        await sftp.connect(server_conf);
+        await sftp.put(localFilePath, remoteFilePath);
+    } catch (err) {
+        console.error(err.message);
+        throw err;
+    } finally {
+        await sftp.end();
+    }
 }
 
 async function count_table(tableName, filterCol, filterVal) {
@@ -221,5 +186,7 @@ module.exports = {
     fetch_name_with_ID,
     upload_languages,
     upload_index_contents,
-    delete_user_submit
+    delete_user_submit,
+    upload_file,
+    download_file
 };

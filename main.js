@@ -38,8 +38,8 @@ app.whenReady().then(() => {
     });
 });
 
-ipcMain.handle('reload-db', async(event) => {
-    server.load_db();
+ipcMain.handle('reload-db', async (event, db_path) => {
+    server.load_db(db_path);
     return 'Finished'
 })
 
@@ -60,26 +60,48 @@ ipcMain.handle('clear-table', async (event, tableName) => {
     return 'Finished';
 })
 
-ipcMain.handle('upload-rows', async(event, function_name, rows) => {
+ipcMain.handle('upload-rows', async (event, function_name, rows) => {
     await server[`upload_${function_name}`](rows);
     return 'Finished'
 })
 
-ipcMain.handle('upload-index-contents', async(event, lanCode, location, contents) => {
+ipcMain.handle('upload-index-contents', async (event, lanCode, location, contents) => {
     await server.upload_index_contents(lanCode, location, contents);
     return 'Finished'
 })
 
-ipcMain.handle('fetch-lan-contents', async(event, tableName, lanCode, filterCol, filterVal) => {
+ipcMain.handle('fetch-lan-contents', async (event, tableName, lanCode, filterCol, filterVal) => {
     return await server.fetch_lan_contents(tableName, lanCode, filterCol, filterVal);
 })
 
-ipcMain.handle('clear-lan', async(event, tableName, lanCode) => {
+ipcMain.handle('clear-lan', async (event, tableName, lanCode) => {
     await server.clear_lan(tableName, lanCode);
     return 'Finished'
 })
 
-ipcMain.handle('delete-user-submit', async(event, funcDesc, createTime) => {
+ipcMain.handle('delete-user-submit', async (event, funcDesc, createTime) => {
     await server.delete_user_submit(funcDesc, createTime);
     return 'Finished'
+})
+
+ipcMain.handle('upload-file', async (event, host, port, username, password, local, remote) => {
+    var server_conf = {
+        host: host,
+        port: port,
+        username: username,
+        password: password
+    }
+    await server.upload_file(server_conf, local, remote);
+    return 'Finished'
+})
+
+ipcMain.handle('download-file', async (event, host, port, username, password, local, remote) => {
+    var server_conf = {
+        host: host,
+        port: port,
+        username: username,
+        password: password
+    }
+    await server.download_file(server_conf, local, remote);
+    return 'Finished';
 })
