@@ -102,6 +102,14 @@ function render_functions_page() {
     })
 }
 
+function render_tools_page() {
+    window.ipcRenderer.invoke('fetch-lan-contents', 'tools', lan_code).then((tools) => {
+        tools.forEach(({name, desc, url, icon_src, tags}) => {
+            $('#tools-panel').append(gen_tool_panel(name, desc, url, icon_src, tags));
+        })
+    })
+}
+
 function render_submits_page() {
     window.ipcRenderer.invoke('fetch-tables', 'user_submit_function').then((submits) => {
         submits.forEach(({ funcDesc, createTime, promptContent, userName }) => {
@@ -124,6 +132,7 @@ function clear_all_pages() {
     $('.index-content-edit-row').remove();
     $('#classes-panel').text('');
     $('#function-panel').text('');
+    $('#tools-panel').text('');
     $('#submit-panel').text('');
 }
 
@@ -146,8 +155,9 @@ function render_left_drawer() {
     [['Overview', 'search', 'overview'],
     ['Manage Languages', 'language', 'languages'],
     ['Edit Index Contents', 'home', 'index'],
-    ['Manage Classes', 'apps', 'classes'],
+    ['Manage Classes', 'list', 'classes'],
     ['Manage Functions', 'functions', 'functions'],
+    ['Manage Tools', 'apps', 'tools'],
     ['User Submits', 'file_upload', 'submits'],
     ['System settings', 'settings', 'settings']
     ].forEach((item) => {
@@ -239,6 +249,7 @@ function save_settings_listener() {
 // Render pages.
 window.ipcRenderer.invoke('reload-db', local_db_path).then(() => {
     render_left_drawer();
+    render_language_selects();
     switch_displayed_page();
 })
 
@@ -305,4 +316,8 @@ $('#add-class-btn').on('click', () => {
 $('#add-function-btn').on('click', () => {
     $('#function-panel').append(gen_function_panel('', '', []));
     mdui.mutation();
+})
+
+$('#add-tool-btn').on('click', () => {
+    $('#tools-panel').append(gen_tool_panel('', '', '', '', ''));
 })

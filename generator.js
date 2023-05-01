@@ -547,3 +547,61 @@ function gen_submit_panel(func_desc, create_time, prompt_content, user_name) {
 
     return panel;
 }
+
+function gen_tool_panel(tool_name, tool_desc, tool_url, tool_icon, tool_tags) {
+    var panel = $(`
+        <div class="mdui-panel-item">
+            <div class="mdui-panel-item-header">
+                <div class="mdui-panel-item-title tool-name">${tool_name}</div>
+                <div class="mdui-panel-item-summary tool-desc">${tool_desc}</div>
+                <i class="mdui-panel-item-arrow mdui-icon material-icons">keyboard_arrow_down</i>
+            </div>
+        </div>
+    `);
+
+    var panel_body = $(`
+        <div class="mdui-panel-item-body prompt-panel-body">
+            <div class="mdui-row">
+                <div class="mdui-col-xs-6">
+                    <input class="mdui-textfield-input tool-name-input" type="text" value="${tool_name}" placeholder="name"/>
+                </div>
+                <div class="mdui-col-xs-6">
+                    <input class="mdui-textfield-input tool-icon-input" type="text" value="${tool_icon}" placeholder="icon"/>
+                </div>
+            </div>
+            <div class="mdui-row">
+                <div class="mdui-col-xs-12">
+                    <input class="mdui-textfield-input tool-url-input" type="text" value="${tool_url}" placeholder="URL"/>
+                </div>
+            </div>
+            <div class="mdui-row">
+                <div class="mdui-col-xs-12">
+                    <textarea class="mdui-textfield-input tool-desc-input" wrap="soft" rows=3 type="text" placeholder="Description">${tool_desc}</textarea>
+                </div>
+            </div>
+            <div class="mdui-row">
+                <div class="mdui-col-xs-12">
+                    <input class="mdui-textfield-input tool-tags-input" type="text" value="${tool_tags}" placeholder="Tags"/>
+                </div>
+            </div>
+        </div>
+    `);
+    panel.append(panel_body);
+
+    panel_body.find('.tool-name-input').on('input', (event) => {
+        panel.find('.tool-name').text($(event.target).val());
+    });
+    panel_body.find('.tool-desc-input').on('input', (event) => {
+        panel.find('.tool-desc').text($(event.target).val());
+    });
+
+    var tool_delete_btn = $(`<button class="mdui-btn mdui-ripple function-delete-btn mdui-text-color-red">Delete</button>`);
+    var panel_action = $(`<div class="mdui-panel-item-actions"></div>`).append(tool_delete_btn);
+    panel_body.append(panel_action);
+
+    tool_delete_btn.on('click', () => {
+        panel.remove();
+    })
+
+    return panel;
+}
