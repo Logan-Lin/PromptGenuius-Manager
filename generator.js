@@ -358,7 +358,7 @@ function gen_function_panel(function_id, function_name, class_tags) {
 
     var prompt_panels = $(`
         <div class="mdui-panel mdui-panel-gapless prompt-panel" mdui-panel></div>
-    `);
+    `).sortable();
     window.ipcRenderer.invoke('fetch-lan-contents', 'function_prompts', lan_code, 'functionID', function_id).then((prompts) => {
         prompts.forEach(({ semanticID, priority, model, content, author, author_link }) => {
             prompt_panels.append(gen_prompt_panel(semanticID, priority, model, content, author, author_link));

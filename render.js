@@ -75,7 +75,8 @@ function render_classes_page() {
             render_language_selects();
             panels.forEach((list) => {
                 $('#classes-panel').append(list);
-            })
+            });
+            $('#classes-panel').sortable();
             mdui.mutation();
         })
     })
@@ -96,7 +97,8 @@ function render_functions_page() {
             render_language_selects();
             panels.forEach((panels) => {
                 $('#function-panel').append(panels);
-            })
+            });
+            $('#function-panel').sortable();
             mdui.mutation();
         })
     })
@@ -106,7 +108,8 @@ function render_tools_page() {
     window.ipcRenderer.invoke('fetch-lan-contents', 'tools', lan_code).then((tools) => {
         tools.forEach(({name, desc, url, icon_src, tags}) => {
             $('#tools-panel').append(gen_tool_panel(name, desc, url, icon_src, tags));
-        })
+        });
+        $('#tools-panel').sortable();
     })
 }
 
