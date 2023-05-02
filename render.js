@@ -1,6 +1,6 @@
 const left_drawer = new mdui.Drawer('#left-drawer');
 var lan_code = localStorage.getItem('lan') || 'eng';
-var cur_page = localStorage.getItem('page') || 'overview';
+var cur_page = localStorage.getItem('page') || 'settings';
 const local_db_path = './instance/PromptGenius.db'
 const download_confirm_dialog = new mdui.Dialog($('#download-confirm-dialog'));
 const upload_confirm_dialog = new mdui.Dialog($('#upload-confirm-dialog'));
@@ -159,7 +159,7 @@ function render_left_drawer() {
     ['Manage Functions', 'functions', 'functions'],
     ['Manage Tools', 'apps', 'tools'],
     ['User Submits', 'file_upload', 'submits'],
-    ['System settings', 'settings', 'settings']
+    ['System Settings', 'settings', 'settings']
     ].forEach((item) => {
         var list = $(`
         <li class="mdui-list-item mdui-ripple" container-target="${item[2]}">
