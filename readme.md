@@ -30,7 +30,7 @@ Click the "Download from DB" button and wait for it to finish. Now you should be
 
 ## TODO List
 
-- Currently, the save functions on "Manage Classes", "Manage Functions", "Manage Tools", and "User Submits" pages are not implemented.
-- The "Manage Functions" page has bad performance if the number of entries is large. Should implement a filter function.
-- The class selection dialog currently lists all existing classes flat. Should implement a hierachical selection akin to that in "Manage Classes" page.
-- Many errors are not handled properly and currently will be thrown by the electron process.
+- [ ] Currently, the save functions on "Manage Classes", "Manage Functions", "Manage Tools", and "User Submits" pages are not implemented.
+- [x] The "Manage Functions" page has bad performance if the number of entries is large. Should implement a filter function.
+- [ ] The class selection dialog currently lists all existing classes flat. Should implement a hierachical selection akin to that in "Manage Classes" page.
+- [ ] Many errors are not handled properly and currently will be thrown by the electron process.

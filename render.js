@@ -106,7 +106,7 @@ function render_functions_page() {
 
 function render_tools_page() {
     window.ipcRenderer.invoke('fetch-lan-contents', 'tools', lan_code).then((tools) => {
-        tools.forEach(({name, desc, url, icon_src, tags}) => {
+        tools.forEach(({ name, desc, url, icon_src, tags }) => {
             $('#tools-panel').append(gen_tool_panel(name, desc, url, icon_src, tags));
         });
         $('#tools-panel').sortable();
@@ -183,10 +183,10 @@ function render_left_drawer() {
 
 // Control functions
 function switch_displayed_page() {
-    $('.switch-containers').addClass('mdui-hidden');
+    $('.switch-containers').hide();
     clear_all_pages();
-    $(`#${cur_page}-container`).removeClass('mdui-hidden');
     window[`render_${cur_page}_page`]();
+    $(`#${cur_page}-container`).show();
 }
 
 // Listeners
@@ -318,6 +318,31 @@ $('#add-class-btn').on('click', () => {
 
 $('#add-function-btn').on('click', () => {
     $('#function-panel').append(gen_function_panel('', '', []));
+    mdui.mutation();
+})
+
+$('#function-search-input').on('input', () => {
+    var search_content = $("#function-search-input").val().toLowerCase();
+    $('#function-panel').children('.mdui-panel-item').each((i, item) => {
+        var contains_content = $(item).find('.function-id-input').val().toLowerCase().includes(search_content) |
+            $(item).find('.function-name-input').val().toLowerCase().includes(search_content)
+
+        if (!contains_content) {
+            $(item).find('.class-tag-chip').each((j, chip) => {
+                if ($(chip).children('.mdui-chip-title').text().toLowerCase().includes(search_content)) {
+                    contains_content = true;
+                }
+            })
+        }
+
+        setTimeout(() => {
+            if (contains_content) {
+                $(item).show();
+            } else {
+                $(item).hide();
+            }
+        }, 10)
+    });
     mdui.mutation();
 })
 
