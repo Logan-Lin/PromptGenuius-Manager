@@ -141,27 +141,27 @@ async function upload_languages(languages) {
     });
 }
 
-async function upload_index_contents(lanCode, location, contents) {
+async function upload_multi_rows(sql, rows) {
     return new Promise((resolve, reject) => {
-        const stmt = db.prepare('INSERT INTO index_contents (lanCode, location, ID, content) VALUES (?, ?, ?, ?)');
+        const stmt = db.prepare(sql);
         let i = 0;
         function next() {
-            if (i < contents.length) {
-                var content = contents[i++];
-                stmt.run(lanCode, location, content.ID, content.content, (err) => {
+            if (i < rows.length) {
+                var row = rows[i++];
+                stmt.run(...row, (err) => {
                     if (err) {
                         reject(err);
                     } else {
                         next();
                     }
-                });
+                })
             } else {
                 stmt.finalize();
                 resolve();
             }
         }
         next();
-    });
+    })
 }
 
 async function delete_user_submit(funcDesc, createTime) {
@@ -184,8 +184,8 @@ module.exports = {
     fetch_tables,
     fetch_lan_contents,
     fetch_name_with_ID,
+    upload_multi_rows,
     upload_languages,
-    upload_index_contents,
     delete_user_submit,
     upload_file,
     download_file

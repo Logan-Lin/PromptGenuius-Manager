@@ -71,6 +71,7 @@ function gen_edit_table_card(title) {
         }
         target_tbody.append(gen_code_name_tr('', '', num_rows));
     }));
+    card.find('.edit-tbody').sortable();
     return card;
 }
 
@@ -101,7 +102,7 @@ function gen_class_panel_child_row(id, name) {
 
 function gen_class_panel(class_id, class_name, class_icon, icon_style, childs) {
     var panel = $(`
-        <div class="mdui-panel-item">
+        <div class="mdui-panel-item class-panel-item">
             <div class="mdui-panel-item-header">
                 <div class="mdui-panel-item-title class-name">${class_name || ''}</div>
                 <div class="mdui-panel-item-summary">
@@ -134,7 +135,7 @@ function gen_class_panel(class_id, class_name, class_icon, icon_style, childs) {
     `);
     panel.append(panel_body);
 
-    var child_container = $('<div class="mdui-container-fluid class-child-container"></div>');
+    var child_container = $('<div class="mdui-container-fluid class-child-container"></div>').sortable();
     panel_body.append(child_container);
 
     var class_id_input = panel_body.find('.class-id-input');

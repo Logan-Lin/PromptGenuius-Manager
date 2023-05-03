@@ -60,14 +60,10 @@ ipcMain.handle('clear-table', async (event, tableName) => {
     return 'Finished';
 })
 
-ipcMain.handle('upload-rows', async (event, function_name, rows) => {
-    await server[`upload_${function_name}`](rows);
-    return 'Finished'
-})
-
-ipcMain.handle('upload-index-contents', async (event, lanCode, location, contents) => {
-    await server.upload_index_contents(lanCode, location, contents);
-    return 'Finished'
+ipcMain.handle('upload-multi-rows', async (event, tableName, colNames, rows) => {
+    const sql = `INSERT INTO ${tableName} (${colNames.join(', ')}) VALUES (${Array(colNames.length).fill('?').join(', ')})`
+    await server.upload_multi_rows(sql, rows);
+    return 'Finished';
 })
 
 ipcMain.handle('fetch-lan-contents', async (event, tableName, lanCode, filterCol, filterVal) => {

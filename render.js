@@ -203,45 +203,81 @@ function uploaded_listener() {
 }
 
 // Save listeners
-function save_languages_listener() {
+async function save_languages_listener() {
     var languages = [];
     $('#languages-row .edit-tbody').find('tr').each((index, tr) => {
         var code = $(tr).find('.code-input').val();
         var name = $(tr).find('.name-input').val();
-        languages.push({ 'code': code, 'name': name });
+        languages.push([code, name]);
     });
-    window.ipcRenderer.invoke('clear-table', 'languages').then(() => {
-        window.ipcRenderer.invoke('upload-rows', 'languages', languages).then(() => {
-            saved_listener();
-            render_language_selects();
-        });
-    });
+    await window.ipcRenderer.invoke('clear-table', 'languages');
+    await window.ipcRenderer.invoke('upload-multi-rows', 'languages',
+        ['code', 'name'], languages);
 }
 
-function save_index_listener() {
-    var entries = {};
+async function save_index_listener() {
+    var contents = [];
     $('#index-container .edit-card').each((index, card) => {
         var location = $(card).attr('edit-target');
-        var contents = [];
         $(card).find('.edit-tbody tr').each((index, tr) => {
             var ID = $(tr).find('.code-input').val();
             var content = $(tr).find('.name-input').val();
-            contents.push({ 'ID': ID, 'content': content })
-        })
-        entries[location] = contents;
-    })
-    window.ipcRenderer.invoke('clear-lan', 'index_contents', lan_code).then(() => {
-        Promise.all(
-            Object.entries(entries).map(async ([location, contents]) => {
-                return await window.ipcRenderer.invoke('upload-index-contents', lan_code, location, contents);
-            })
-        ).then(() => {
-            saved_listener();
+            contents.push([lan_code, location, ID, content]);
         })
     })
+    await window.ipcRenderer.invoke('clear-lan', 'index_contents', lan_code);
+    await window.ipcRenderer.invoke('upload-multi-rows', 'index_contents',
+        ['lanCode', 'location', 'ID', 'content'], contents);
 }
 
-function save_settings_listener() {
+function hasDuplicates(array) {
+    for (let i = 0; i < array.length; i++) {
+        if (array.indexOf(array[i]) !== i) {
+            return true;
+        }
+    }
+    return false;
+}
+
+async function save_classes_listener() {
+    var _class_IDs = [];
+    var classes = [];
+    var class_names = [];
+    $('#classes-panel .class-panel-item').each((index, item) => {
+        var ID = $(item).find('.class-id-input').val();
+        var name = $(item).find('.class-name-input').val();
+        var icon = $(item).find('.class-icon-input').val();
+        var icon_style = $(item).find('.class-icon-style-input').val();
+        if ($(item).find('.child-row').length === 0) {
+            var childrens = null;
+        } else {
+            var childrens = [];
+            $(item).find('.child-row').each((index, row) => {
+                var child_ID = $(row).find('.child-id-input').val();
+                var child_name = $(row).find('.child-name-input').val();
+                childrens.push(child_ID);
+                if (!_class_IDs.includes(child_ID)) {
+                    class_names.push([child_ID, lan_code, child_name])
+                    _class_IDs.push(child_ID);
+                }
+            });
+            childrens = childrens.join(',');
+        }
+        classes.push([ID, icon, icon_style, childrens]);
+        if (!_class_IDs.includes(ID)) {
+            class_names.push([ID, lan_code, name]);
+            _class_IDs.push(ID);
+        }
+    });
+    await window.ipcRenderer.invoke('clear-table', 'classes');
+    await window.ipcRenderer.invoke('upload-multi-rows', 'classes',
+        ['ID', 'icon', 'icon_style', 'childrens'], classes);
+    await window.ipcRenderer.invoke('clear-lan', 'class_names', lan_code);
+    await window.ipcRenderer.invoke('upload-multi-rows', 'class_names',
+        ['ID', 'lanCode', 'name'], class_names);
+}
+
+async function save_settings_listener() {
     localStorage.setItem('host', $('#host-input').val());
     localStorage.setItem('port', $('#port-input').val());
     localStorage.setItem('path', $('#path-input').val());
@@ -267,8 +303,7 @@ $('.language-select').on('change', (event) => {
 });
 $('#save-cache-btn').on('click', () => {
     try {
-        window[`save_${cur_page}_listener`]();
-        mdui.snackbar('Saved to local cache.')
+        window[`save_${cur_page}_listener`]().then(saved_listener);
     } catch (error) {
         mdui.snackbar('This page do not contain data to save.');
     }
