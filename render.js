@@ -6,9 +6,9 @@ const download_confirm_dialog = new mdui.Dialog($('#download-confirm-dialog'));
 const upload_confirm_dialog = new mdui.Dialog($('#upload-confirm-dialog'));
 
 // Functions for render main containers.
-function render_overview_page() {
+async function render_overview_page() {
     // Render statistic lists.
-    Promise.all(
+    var stat_lists = await Promise.all(
         // Create a list of promises, so that the list will only render when all queries are fulfilled.
         [
             ['translate', 'Languages', 'languages'],
@@ -24,25 +24,22 @@ function render_overview_page() {
             return gen_stat_list_desc(icon, desc,
                 await window.ipcRenderer.invoke('count-rows', table, filter_cols, filter_vals));
         })
-    ).then((stat_lists) => {
-        render_language_selects();
-        stat_lists.forEach((list) => {
-            $('#overview-stat-list').append(list);
-        })
-    });
-}
-
-function render_languages_page() {
-    window.ipcRenderer.invoke('fetch-rows', 'languages').then(languages => {
-        $('#languages-row').append(gen_edit_table_card('Manage Website Languages'));
-        languages.forEach((row) => {
-            $('#languages-row .edit-tbody').append(gen_code_name_tr(row.code, row.name));
-        });
+    )
+    stat_lists.forEach((list) => {
+        $('#overview-stat-list').append(list);
     })
 }
 
-function render_index_page() {
-    Promise.all(
+async function render_languages_page() {
+    var languages = await window.ipcRenderer.invoke('fetch-rows', 'languages')
+    $('#languages-row').append(gen_edit_table_card('Manage Website Languages'));
+    languages.forEach((row) => {
+        $('#languages-row .edit-tbody').append(gen_code_name_tr(row.code, row.name));
+    });
+}
+
+async function render_index_page() {
+    var cards = await Promise.all(
         [['Site', 'site'], ['Search Inputs', 'search'],
         ['Cards', 'cards'], ['Inputs', 'input'],
         ['Submit Dialog', 'submit_dialog'],
@@ -55,83 +52,73 @@ function render_index_page() {
                 })
             return card;
         })
-    ).then((cards) => {
-        render_language_selects();
-        cards.forEach((card) => {
-            $('#index-container').append($(`<div class="mdui-row index-content-edit-row mdui-m-y-2">`).append(card));
-        })
+    )
+    cards.forEach((card) => {
+        $('#index-container').append($(`<div class="mdui-row index-content-edit-row mdui-m-y-2">`).append(card));
     })
 }
 
-function render_classes_page() {
-    window.ipcRenderer.invoke('fetch-rows', 'classes').then((classes) => {
-        Promise.all(classes.map(async ({ ID, icon, icon_style, childrens }) => {
-            var class_name = (await window.ipcRenderer.invoke('fetch-rows', 'class_names', ['name'],
-                ['ID', 'lanCode'], [ID, lan_code]))[0]?.name;
-            var childs = undefined;
-            if (childrens !== null) {
-                childs = await Promise.all(childrens.split(',').map(async (child_id) => {
-                    return {
-                        id: child_id,
-                        name: (await window.ipcRenderer.invoke('fetch-rows', 'class_names', ['name'],
-                            ['ID', 'lanCode'], [child_id, lan_code]))[0]?.name
-                    }
-                }))
-            }
-            return gen_class_panel(ID, class_name, icon, icon_style, childs);
-        })).then((panels) => {
-            render_language_selects();
-            panels.forEach((list) => {
-                $('#classes-panel').append(list);
-            });
-            $('#classes-panel').sortable();
-            mdui.mutation();
-        })
-    })
-}
-
-function render_functions_page() {
-    window.ipcRenderer.invoke('fetch-rows', 'functions').then((functions) => {
-        Promise.all(functions.map(async ({ ID, classes }) => {
-            var function_name = (await window.ipcRenderer.invoke('fetch-rows', 'function_names', ['name'],
-                ['ID', 'lanCode'], [ID, lan_code]))?.[0].name;
-            var class_tags = await Promise.all(classes.split(',').map(async (class_id) => {
+async function render_classes_page() {
+    var classes = await window.ipcRenderer.invoke('fetch-rows', 'classes')
+    var panels = await Promise.all(classes.map(async ({ ID, icon, icon_style, childrens }) => {
+        var class_name = (await window.ipcRenderer.invoke('fetch-rows', 'class_names', ['name'],
+            ['ID', 'lanCode'], [ID, lan_code]))[0]?.name;
+        var childs = undefined;
+        if (childrens !== null) {
+            childs = await Promise.all(childrens.split(',').map(async (child_id) => {
                 return {
-                    id: class_id,
+                    id: child_id,
                     name: (await window.ipcRenderer.invoke('fetch-rows', 'class_names', ['name'],
-                        ['ID', 'lanCode'], [class_id, lan_code]))[0]?.name
+                        ['ID', 'lanCode'], [child_id, lan_code]))[0]?.name
                 }
-            }));
-            return gen_function_panel(ID, function_name, class_tags);
-        })).then((panels) => {
-            render_language_selects();
-            panels.forEach((panels) => {
-                $('#function-panel').append(panels);
-            });
-            $('#function-panel').sortable();
-            mdui.mutation();
-        })
+            }))
+        }
+        return gen_class_panel(ID, class_name, icon, icon_style, childs);
+    }))
+    panels.forEach((list) => {
+        $('#classes-panel').append(list);
+    });
+    $('#classes-panel').sortable();
+    mdui.mutation();
+}
+
+async function render_functions_page() {
+    var functions = await window.ipcRenderer.invoke('fetch-rows', 'functions');
+    var panels = await Promise.all(functions.map(async ({ ID, classes }) => {
+        var function_name = (await window.ipcRenderer.invoke('fetch-rows', 'function_names', ['name'],
+            ['ID', 'lanCode'], [ID, lan_code]))?.[0].name;
+        var class_tags = await Promise.all(classes.split(',').map(async (class_id) => {
+            return {
+                id: class_id,
+                name: (await window.ipcRenderer.invoke('fetch-rows', 'class_names', ['name'],
+                    ['ID', 'lanCode'], [class_id, lan_code]))[0]?.name
+            }
+        }));
+        return gen_function_panel(ID, function_name, class_tags);
+    }));
+    panels.forEach((panels) => {
+        $('#function-panel').append(panels);
+    });
+    $('#function-panel').sortable();
+    mdui.mutation();
+}
+
+async function render_tools_page() {
+    var tools = await window.ipcRenderer.invoke('fetch-rows', 'tools', undefined, ['lanCode'], [lan_code])
+    tools.forEach(({ name, desc, url, icon_src, tags }) => {
+        $('#tools-panel').append(gen_tool_panel(name, desc, url, icon_src, tags));
+    });
+    $('#tools-panel').sortable();
+}
+
+async function render_submits_page() {
+    var submits = await window.ipcRenderer.invoke('fetch-rows', 'user_submit_function')
+    submits.forEach(({ funcDesc, createTime, promptContent, userName }) => {
+        $('#submit-panel').append(gen_submit_panel(funcDesc, createTime, promptContent, userName));
     })
 }
 
-function render_tools_page() {
-    window.ipcRenderer.invoke('fetch-rows', 'tools', undefined, ['lanCode'], [lan_code]).then((tools) => {
-        tools.forEach(({ name, desc, url, icon_src, tags }) => {
-            $('#tools-panel').append(gen_tool_panel(name, desc, url, icon_src, tags));
-        });
-        $('#tools-panel').sortable();
-    })
-}
-
-function render_submits_page() {
-    window.ipcRenderer.invoke('fetch-rows', 'user_submit_function').then((submits) => {
-        submits.forEach(({ funcDesc, createTime, promptContent, userName }) => {
-            $('#submit-panel').append(gen_submit_panel(funcDesc, createTime, promptContent, userName));
-        })
-    })
-}
-
-function render_settings_page() {
+async function render_settings_page() {
     $('#host-input').val(localStorage.getItem('host'));
     $('#port-input').val(localStorage.getItem('port'));
     $('#path-input').val(localStorage.getItem('path'));
@@ -139,27 +126,27 @@ function render_settings_page() {
     $('#password-input').val(localStorage.getItem('password'));
 }
 
-function clear_all_pages() {
+async function clear_all_pages() {
     $('#overview-stat-list').text('');
     $('#languages-row').text('');
     $('.index-content-edit-row').remove();
     $('#classes-panel').text('');
+    $('#functions-class-tab').text('');
     $('#function-panel').text('');
     $('#tools-panel').text('');
     $('#submit-panel').text('');
 }
 
-function render_language_selects() {
-    window.ipcRenderer.invoke('fetch-rows', 'languages').then(languages => {
-        $('.language-select').text('');
-        languages.forEach((row) => {
-            var option = $(`<option value="${row.code}">`).text(row.name);
-            if (row.code == lan_code) {
-                option.attr('selected', 'selected');
-            }
-            $('.language-select').append(option);
-        });
-    })
+async function render_language_selects() {
+    var languages = await window.ipcRenderer.invoke('fetch-rows', 'languages')
+    $('.language-select').text('');
+    languages.forEach((row) => {
+        var option = $(`<option value="${row.code}">`).text(row.name);
+        if (row.code == lan_code) {
+            option.attr('selected', 'selected');
+        }
+        $('.language-select').append(option);
+    });
 }
 
 function render_left_drawer() {
@@ -192,10 +179,11 @@ function render_left_drawer() {
 }
 
 // Control functions
-function switch_displayed_page() {
+async function switch_displayed_page() {
     $('.switch-containers').hide();
-    clear_all_pages();
-    window[`render_${cur_page}_page`]();
+    await clear_all_pages();
+    await window[`render_${cur_page}_page`]();
+    await render_language_selects();
     $(`#${cur_page}-container`).show();
 }
 
@@ -240,15 +228,6 @@ async function save_index_listener() {
         ['lanCode', 'location', 'ID', 'content'], contents);
 }
 
-function hasDuplicates(array) {
-    for (let i = 0; i < array.length; i++) {
-        if (array.indexOf(array[i]) !== i) {
-            return true;
-        }
-    }
-    return false;
-}
-
 async function save_classes_listener() {
     var _class_IDs = [];
     var classes = [];
@@ -287,6 +266,21 @@ async function save_classes_listener() {
         ['ID', 'lanCode', 'name'], class_names);
 }
 
+async function save_tools_listener() {
+    var tools = [];
+    $('#tools-panel .tool-panel-item').each((index, item) => {
+        var name = $(item).find('.tool-name-input').val();
+        var icon = $(item).find('.tool-icon-input').val();
+        var url = $(item).find('.tool-url-input').val();
+        var desc = $(item).find('.tool-desc-input').val();
+        var tags = $(item).find('.tool-tags-input').val();
+        tools.push([lan_code, name, desc, url, icon, tags]);
+    });
+    await window.ipcRenderer.invoke('delete-rows', 'tools', ['lanCode'], [lan_code]);
+    await window.ipcRenderer.invoke('insert-rows', 'tools',
+        ['lanCode', 'name', 'desc', 'url', 'icon_src', 'tags'], tools);
+}
+
 async function save_settings_listener() {
     localStorage.setItem('host', $('#host-input').val());
     localStorage.setItem('port', $('#port-input').val());
@@ -304,10 +298,10 @@ window.ipcRenderer.invoke('reload-db').then(() => {
 
 // Link listeners.
 $('#drawer-btn').on('click', () => { left_drawer.toggle(); });
-$('.language-select').on('change', (event) => {
+$('.language-select').on('change', async (event) => {
     lan_code = $(event.target).find(':selected').val();
-    render_language_selects();
-    switch_displayed_page();
+    await clear_all_pages();
+    await window[`render_${cur_page}_page`]();
 
     localStorage.setItem('lan', lan_code);
 });
@@ -366,9 +360,11 @@ $('#add-function-btn').on('click', () => {
     mdui.mutation();
 })
 
-$('#function-search-input').on('input', () => {
+$('#function-search-input').on('input', async () => {
     var search_content = $("#function-search-input").val().toLowerCase();
-    $('#function-panel').children('.mdui-panel-item').each((i, item) => {
+    var items = $('#function-panel').children('.mdui-panel-item');
+    for (let i = 0; i < items.length; i++) {
+        var item = items[i];
         var contains_content = $(item).find('.function-id-input').val().toLowerCase().includes(search_content) |
             $(item).find('.function-name-input').val().toLowerCase().includes(search_content)
 
@@ -380,14 +376,14 @@ $('#function-search-input').on('input', () => {
             })
         }
 
-        setTimeout(() => {
-            if (contains_content) {
-                $(item).show();
-            } else {
-                $(item).hide();
-            }
-        }, 10)
-    });
+        if (contains_content) {
+            $(item).show('drop', 300);
+        } else {
+            $(item).hide('drop', 300);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 1));
+    }
     mdui.mutation();
 })
 

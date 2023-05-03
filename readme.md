@@ -12,6 +12,9 @@ This project is meant to build an easy-to-use GUI software for managing and edit
 ## Run and build
 
 ```bash
+# Install required packages
+npm install
+
 # Run application with npm
 npm run start
 

@@ -185,7 +185,7 @@ function gen_class_panel(class_id, class_name, class_icon, icon_style, childs) {
 function gen_class_tag_chip(class_id, class_name) {
     var class_chip = $(`
     <div class="mdui-chip class-tag-chip mdui-m-r-1 mdui-color-grey-300" class-id="${class_id}">
-        <span class="mdui-chip-title">${class_name}</span>
+        <span class="mdui-chip-title">${class_name || class_id}</span>
         <span class="mdui-chip-delete class-tag-delete-btn">
             <i class="mdui-icon material-icons">cancel</i>
         </span>
@@ -554,7 +554,7 @@ function gen_submit_panel(func_desc, create_time, prompt_content, user_name) {
 
 function gen_tool_panel(tool_name, tool_desc, tool_url, tool_icon, tool_tags) {
     var panel = $(`
-        <div class="mdui-panel-item">
+        <div class="mdui-panel-item tool-panel-item">
             <div class="mdui-panel-item-header">
                 <div class="mdui-panel-item-title tool-name">${tool_name}</div>
                 <div class="mdui-panel-item-summary tool-desc">${tool_desc}</div>
