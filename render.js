@@ -17,7 +17,12 @@ function render_overview_page() {
             ['lightbulb_outline', 'Prompts', 'function_prompts', 'lanCode', lan_code],
             ['account_circle', 'Pending user submits', 'user_submit_function']
         ].map(async ([icon, desc, table, col, val]) => {
-            return gen_stat_list_desc(icon, desc, await window.ipcRenderer.invoke('count-table', table, col, val));
+            if (col !== undefined) {
+                var filter_cols = [col];
+                var filter_vals = [val];
+            }
+            return gen_stat_list_desc(icon, desc,
+                await window.ipcRenderer.invoke('count-rows', table, filter_cols, filter_vals));
         })
     ).then((stat_lists) => {
         render_language_selects();
@@ -28,7 +33,7 @@ function render_overview_page() {
 }
 
 function render_languages_page() {
-    window.ipcRenderer.invoke('fetch-tables', 'languages').then(languages => {
+    window.ipcRenderer.invoke('fetch-rows', 'languages').then(languages => {
         $('#languages-row').append(gen_edit_table_card('Manage Website Languages'));
         languages.forEach((row) => {
             $('#languages-row .edit-tbody').append(gen_code_name_tr(row.code, row.name));
@@ -44,9 +49,10 @@ function render_index_page() {
         ['Tools Dialog', 'tools_dialog']].map(async ([title, location]) => {
             var card = gen_edit_table_card(`Contents in ${title}`);
             card.attr('edit-target', location);
-            (await window.ipcRenderer.invoke('fetch-lan-contents', 'index_contents', lan_code, 'location', location)).forEach((row) => {
-                card.find('.edit-tbody').append(gen_code_name_tr(row.ID, row.content, 2));
-            })
+            (await window.ipcRenderer.invoke('fetch-rows', 'index_contents', undefined,
+                ['lanCode', 'location'], [lan_code, location])).forEach((row) => {
+                    card.find('.edit-tbody').append(gen_code_name_tr(row.ID, row.content, 2));
+                })
             return card;
         })
     ).then((cards) => {
@@ -58,15 +64,17 @@ function render_index_page() {
 }
 
 function render_classes_page() {
-    window.ipcRenderer.invoke('fetch-tables', 'classes').then((classes) => {
+    window.ipcRenderer.invoke('fetch-rows', 'classes').then((classes) => {
         Promise.all(classes.map(async ({ ID, icon, icon_style, childrens }) => {
-            var class_name = await window.ipcRenderer.invoke('fetch-name-with-ID', 'class_names', ID, lan_code);
+            var class_name = (await window.ipcRenderer.invoke('fetch-rows', 'class_names', ['name'],
+                ['ID', 'lanCode'], [ID, lan_code]))[0]?.name;
             var childs = undefined;
             if (childrens !== null) {
                 childs = await Promise.all(childrens.split(',').map(async (child_id) => {
                     return {
                         id: child_id,
-                        name: await window.ipcRenderer.invoke('fetch-name-with-ID', 'class_names', child_id, lan_code)
+                        name: (await window.ipcRenderer.invoke('fetch-rows', 'class_names', ['name'],
+                            ['ID', 'lanCode'], [child_id, lan_code]))[0]?.name
                     }
                 }))
             }
@@ -83,13 +91,15 @@ function render_classes_page() {
 }
 
 function render_functions_page() {
-    window.ipcRenderer.invoke('fetch-tables', 'functions').then((functions) => {
+    window.ipcRenderer.invoke('fetch-rows', 'functions').then((functions) => {
         Promise.all(functions.map(async ({ ID, classes }) => {
-            var function_name = await window.ipcRenderer.invoke('fetch-name-with-ID', 'function_names', ID, lan_code);
+            var function_name = (await window.ipcRenderer.invoke('fetch-rows', 'function_names', ['name'],
+                ['ID', 'lanCode'], [ID, lan_code]))?.[0].name;
             var class_tags = await Promise.all(classes.split(',').map(async (class_id) => {
                 return {
                     id: class_id,
-                    name: await window.ipcRenderer.invoke('fetch-name-with-ID', 'class_names', class_id, lan_code)
+                    name: (await window.ipcRenderer.invoke('fetch-rows', 'class_names', ['name'],
+                        ['ID', 'lanCode'], [class_id, lan_code]))[0]?.name
                 }
             }));
             return gen_function_panel(ID, function_name, class_tags);
@@ -105,7 +115,7 @@ function render_functions_page() {
 }
 
 function render_tools_page() {
-    window.ipcRenderer.invoke('fetch-lan-contents', 'tools', lan_code).then((tools) => {
+    window.ipcRenderer.invoke('fetch-rows', 'tools', undefined, ['lanCode'], [lan_code]).then((tools) => {
         tools.forEach(({ name, desc, url, icon_src, tags }) => {
             $('#tools-panel').append(gen_tool_panel(name, desc, url, icon_src, tags));
         });
@@ -114,7 +124,7 @@ function render_tools_page() {
 }
 
 function render_submits_page() {
-    window.ipcRenderer.invoke('fetch-tables', 'user_submit_function').then((submits) => {
+    window.ipcRenderer.invoke('fetch-rows', 'user_submit_function').then((submits) => {
         submits.forEach(({ funcDesc, createTime, promptContent, userName }) => {
             $('#submit-panel').append(gen_submit_panel(funcDesc, createTime, promptContent, userName));
         })
@@ -140,7 +150,7 @@ function clear_all_pages() {
 }
 
 function render_language_selects() {
-    window.ipcRenderer.invoke('fetch-tables', 'languages').then(languages => {
+    window.ipcRenderer.invoke('fetch-rows', 'languages').then(languages => {
         $('.language-select').text('');
         languages.forEach((row) => {
             var option = $(`<option value="${row.code}">`).text(row.name);
@@ -210,8 +220,8 @@ async function save_languages_listener() {
         var name = $(tr).find('.name-input').val();
         languages.push([code, name]);
     });
-    await window.ipcRenderer.invoke('clear-table', 'languages');
-    await window.ipcRenderer.invoke('upload-multi-rows', 'languages',
+    await window.ipcRenderer.invoke('delete-rows', 'languages');
+    await window.ipcRenderer.invoke('upload-rows', 'languages',
         ['code', 'name'], languages);
 }
 
@@ -225,8 +235,8 @@ async function save_index_listener() {
             contents.push([lan_code, location, ID, content]);
         })
     })
-    await window.ipcRenderer.invoke('clear-lan', 'index_contents', lan_code);
-    await window.ipcRenderer.invoke('upload-multi-rows', 'index_contents',
+    await window.ipcRenderer.invoke('delete-rows', 'index_contents', ['lanCode'], [lan_code]);
+    await window.ipcRenderer.invoke('upload-rows', 'index_contents',
         ['lanCode', 'location', 'ID', 'content'], contents);
 }
 
@@ -269,11 +279,11 @@ async function save_classes_listener() {
             _class_IDs.push(ID);
         }
     });
-    await window.ipcRenderer.invoke('clear-table', 'classes');
-    await window.ipcRenderer.invoke('upload-multi-rows', 'classes',
+    await window.ipcRenderer.invoke('delete-rows', 'classes');
+    await window.ipcRenderer.invoke('upload-rows', 'classes',
         ['ID', 'icon', 'icon_style', 'childrens'], classes);
     await window.ipcRenderer.invoke('clear-lan', 'class_names', lan_code);
-    await window.ipcRenderer.invoke('upload-multi-rows', 'class_names',
+    await window.ipcRenderer.invoke('upload-rows', 'class_names',
         ['ID', 'lanCode', 'name'], class_names);
 }
 

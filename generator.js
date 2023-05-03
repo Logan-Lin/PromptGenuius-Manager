@@ -255,7 +255,7 @@ function gen_prompt_panel(prompt_id, priority, model, content, author, author_li
 }
 
 function pop_class_choice_dialog(lan_code, class_click_listenser, dialog_close_listener) {
-    window.ipcRenderer.invoke('fetch-lan-contents', 'class_names', lan_code).then((classes) => {
+    window.ipcRenderer.invoke('fetch-rows', 'class_names', undefined, ['lanCode'], [lan_code]).then((classes) => {
         var class_choice_dialog = $(`
                 <div class="mdui-dialog">
                     <div class="mdui-dialog-title">
@@ -360,11 +360,12 @@ function gen_function_panel(function_id, function_name, class_tags) {
     var prompt_panels = $(`
         <div class="mdui-panel mdui-panel-gapless prompt-panel" mdui-panel></div>
     `).sortable();
-    window.ipcRenderer.invoke('fetch-lan-contents', 'function_prompts', lan_code, 'functionID', function_id).then((prompts) => {
-        prompts.forEach(({ semanticID, priority, model, content, author, author_link }) => {
-            prompt_panels.append(gen_prompt_panel(semanticID, priority, model, content, author, author_link));
+    window.ipcRenderer.invoke('fetch-rows', 'function_prompts', undefined,
+        ['lanCode', 'functionID'], [lan_code, function_id]).then((prompts) => {
+            prompts.forEach(({ semanticID, priority, model, content, author, author_link }) => {
+                prompt_panels.append(gen_prompt_panel(semanticID, priority, model, content, author, author_link));
+            })
         })
-    })
     panel_body.append(prompt_panels);
 
     var function_delete_btn = $(`<button class="mdui-btn mdui-ripple function-delete-btn mdui-text-color-red">Delete</button>`);
@@ -382,7 +383,7 @@ function gen_function_panel(function_id, function_name, class_tags) {
 }
 
 function pop_function_choice_dialog(lan_code, function_click_listener, dialog_close_listener) {
-    window.ipcRenderer.invoke('fetch-tables', 'functions').then((functions) => {
+    window.ipcRenderer.invoke('fetch-rows', 'functions').then((functions) => {
         var function_choice_dialog = $(`
                     <div class="mdui-dialog">
                         <div class="mdui-dialog-title">
@@ -405,7 +406,8 @@ function pop_function_choice_dialog(lan_code, function_click_listener, dialog_cl
         Promise.all(functions.map(async ({ ID }) => {
             return {
                 id: ID,
-                name: await window.ipcRenderer.invoke('fetch-name-with-ID', 'function_names', ID, lan_code)
+                name: (await window.ipcRenderer.invoke('fetch-rows', 'function_names', ['name'],
+                    ['ID', 'lanCode'], [ID, lan_code]))?.[0].name
             }
         })).then((function_names) => {
             function_names.forEach(({ id, name }) => {
@@ -482,7 +484,7 @@ function gen_submit_panel(func_desc, create_time, prompt_content, user_name) {
     panel.append(panel_body);
 
     var language_form = panel_body.find('.language-form');
-    window.ipcRenderer.invoke('fetch-tables', 'languages').then(languages => {
+    window.ipcRenderer.invoke('fetch-rows', 'languages').then(languages => {
         language_form.text('');
         languages.forEach(({ code, name }) => {
             language_form.append(`
@@ -540,10 +542,11 @@ function gen_submit_panel(func_desc, create_time, prompt_content, user_name) {
     })
 
     discard_btn.on('click', () => {
-        window.ipcRenderer.invoke('delete-user-submit', func_desc, create_time).then(() => {
-            panel.remove();
-            mdui.snackbar('Deleted user submission from database.');
-        })
+        window.ipcRenderer.invoke('delete-rows', 'user_submit_function',
+            ['funcDesc', 'createTime'], [func_desc, create_time]).then(() => {
+                panel.remove();
+                mdui.snackbar('Deleted user submission from database.');
+            })
     })
 
     return panel;

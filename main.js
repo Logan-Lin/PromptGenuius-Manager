@@ -43,41 +43,23 @@ ipcMain.handle('reload-db', async (event, db_path) => {
     return 'Finished'
 })
 
-ipcMain.handle('count-table', async (event, tableName, filterCol, filterVal) => {
-    return await server.count_table(tableName, filterCol, filterVal);
+ipcMain.handle('count-rows', async (event, tableName, filterCols, filterVals) => {
+    return await server.count_rows(tableName, filterCols, filterVals);
 })
 
-ipcMain.handle('fetch-tables', async (event, tableName) => {
-    return await server.fetch_tables(tableName);
+ipcMain.handle('fetch-rows', async (event, tableName, fetchCols, filterCol, filterVal) => {
+    return await server.fetch_rows(tableName, fetchCols, filterCol, filterVal);
 })
 
-ipcMain.handle('fetch-name-with-ID', async (event, tableName, ID, lanCode) => {
-    return await server.fetch_name_with_ID(tableName, ID, lanCode);
-})
-
-ipcMain.handle('clear-table', async (event, tableName) => {
-    await server.clear_table(tableName);
+ipcMain.handle('delete-rows', async (event, tableName, filterCols, filterVals) => {
+    await server.delete_rows(tableName, filterCols, filterVals);
     return 'Finished';
 })
 
-ipcMain.handle('upload-multi-rows', async (event, tableName, colNames, rows) => {
+ipcMain.handle('upload-rows', async (event, tableName, colNames, rows) => {
     const sql = `INSERT INTO ${tableName} (${colNames.join(', ')}) VALUES (${Array(colNames.length).fill('?').join(', ')})`
-    await server.upload_multi_rows(sql, rows);
+    await server.upload_rows(sql, rows);
     return 'Finished';
-})
-
-ipcMain.handle('fetch-lan-contents', async (event, tableName, lanCode, filterCol, filterVal) => {
-    return await server.fetch_lan_contents(tableName, lanCode, filterCol, filterVal);
-})
-
-ipcMain.handle('clear-lan', async (event, tableName, lanCode) => {
-    await server.clear_lan(tableName, lanCode);
-    return 'Finished'
-})
-
-ipcMain.handle('delete-user-submit', async (event, funcDesc, createTime) => {
-    await server.delete_user_submit(funcDesc, createTime);
-    return 'Finished'
 })
 
 ipcMain.handle('upload-file', async (event, host, port, username, password, local, remote) => {
