@@ -1,7 +1,7 @@
 const left_drawer = new mdui.Drawer('#left-drawer');
 var lan_code = localStorage.getItem('lan') || 'eng';
 var cur_page = localStorage.getItem('page') || 'settings';
-const local_db_path = './instance/PromptGenius.db'
+// const local_db_path = './instance/PromptGenius.db'
 const download_confirm_dialog = new mdui.Dialog($('#download-confirm-dialog'));
 const upload_confirm_dialog = new mdui.Dialog($('#upload-confirm-dialog'));
 
@@ -221,7 +221,7 @@ async function save_languages_listener() {
         languages.push([code, name]);
     });
     await window.ipcRenderer.invoke('delete-rows', 'languages');
-    await window.ipcRenderer.invoke('upload-rows', 'languages',
+    await window.ipcRenderer.invoke('insert-rows', 'languages',
         ['code', 'name'], languages);
 }
 
@@ -236,7 +236,7 @@ async function save_index_listener() {
         })
     })
     await window.ipcRenderer.invoke('delete-rows', 'index_contents', ['lanCode'], [lan_code]);
-    await window.ipcRenderer.invoke('upload-rows', 'index_contents',
+    await window.ipcRenderer.invoke('insert-rows', 'index_contents',
         ['lanCode', 'location', 'ID', 'content'], contents);
 }
 
@@ -280,10 +280,10 @@ async function save_classes_listener() {
         }
     });
     await window.ipcRenderer.invoke('delete-rows', 'classes');
-    await window.ipcRenderer.invoke('upload-rows', 'classes',
+    await window.ipcRenderer.invoke('insert-rows', 'classes',
         ['ID', 'icon', 'icon_style', 'childrens'], classes);
-    await window.ipcRenderer.invoke('clear-lan', 'class_names', lan_code);
-    await window.ipcRenderer.invoke('upload-rows', 'class_names',
+    await window.ipcRenderer.invoke('delete-rows', 'class_names', ['lanCode'], [lan_code]);
+    await window.ipcRenderer.invoke('insert-rows', 'class_names',
         ['ID', 'lanCode', 'name'], class_names);
 }
 
@@ -296,7 +296,7 @@ async function save_settings_listener() {
 }
 
 // Render pages.
-window.ipcRenderer.invoke('reload-db', local_db_path).then(() => {
+window.ipcRenderer.invoke('reload-db').then(() => {
     render_left_drawer();
     render_language_selects();
     switch_displayed_page();
@@ -329,8 +329,8 @@ $('#download-confirm-btn').on('click', () => {
     window.ipcRenderer.invoke('download-file',
         localStorage.getItem('host'), localStorage.getItem('port'),
         localStorage.getItem('username'), localStorage.getItem('password'),
-        local_db_path, localStorage.getItem('path')).then(() => {
-            window.ipcRenderer.invoke('reload-db', local_db_path).then(() => {
+        localStorage.getItem('path')).then(() => {
+            window.ipcRenderer.invoke('reload-db').then(() => {
                 download_confirm_dialog.close();
                 $('#download-confirm-dialog .mdui-dialog-actions').removeClass('mdui-invisible');
                 $('#download-confirm-dialog-prompt').removeClass('mdui-hidden');
@@ -348,7 +348,7 @@ $('#upload-confirm-btn').on('click', () => {
     window.ipcRenderer.invoke('upload-file',
         localStorage.getItem('host'), localStorage.getItem('port'),
         localStorage.getItem('username'), localStorage.getItem('password'),
-        local_db_path, localStorage.getItem('path')).then(() => {
+        localStorage.getItem('path')).then(() => {
             upload_confirm_dialog.close();
             $('#upload-confirm-dialog .mdui-dialog-actions').removeClass('mdui-hidden');
             $('#upload-confirm-dialog-prompt').removeClass('mdui-hidden');

@@ -1,12 +1,13 @@
-const sqlite3 = require('sqlite3').verbose();
+const sqlite3 = require('sqlite3');
 const Client = require('ssh2-sftp-client');
 const fs = require('fs');
 const path = require('path');
 
 var db;
+const local_db_path = path.join(__dirname, 'instance', 'PromptGenius.db');
 
-function load_db(db_path) {
-    db = new sqlite3.Database(db_path, (err) => {
+function load_db() {
+    db = new sqlite3.Database(local_db_path, (err) => {
         if (err) {
             console.error('Error connecting to SQLite database:', err);
             return;
@@ -14,11 +15,11 @@ function load_db(db_path) {
     });
 }
 
-async function download_file(server_conf, localFilePath, remoteFilePath) {
+async function download_file(server_conf, remoteFilePath) {
     const sftp = new Client();
     try {
         await sftp.connect(server_conf);
-        await sftp.fastGet(remoteFilePath, localFilePath);
+        await sftp.fastGet(remoteFilePath, local_db_path);
     } catch (err) {
         console.error(err.message);
         throw err;
@@ -27,11 +28,11 @@ async function download_file(server_conf, localFilePath, remoteFilePath) {
     }
 }
 
-async function upload_file(server_conf, localFilePath, remoteFilePath) {
+async function upload_file(server_conf, remoteFilePath) {
     const sftp = new Client();
     try {
         await sftp.connect(server_conf);
-        await sftp.put(localFilePath, remoteFilePath);
+        await sftp.put(local_db_path, remoteFilePath);
     } catch (err) {
         console.error(err.message);
         throw err;
@@ -97,7 +98,7 @@ async function delete_rows(tableName, filterCols, filterVals) {
     })
 }
 
-async function upload_rows(sql, rows) {
+async function insert_rows(sql, rows) {
     return new Promise((resolve, reject) => {
         const stmt = db.prepare(sql);
         let i = 0;
@@ -125,7 +126,7 @@ module.exports = {
     count_rows,
     fetch_rows,
     delete_rows,
-    upload_rows,
+    insert_rows: insert_rows,
     upload_file,
     download_file
 };

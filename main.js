@@ -38,8 +38,8 @@ app.whenReady().then(() => {
     });
 });
 
-ipcMain.handle('reload-db', async (event, db_path) => {
-    server.load_db(db_path);
+ipcMain.handle('reload-db', async (event) => {
+    server.load_db();
     return 'Finished'
 })
 
@@ -56,30 +56,30 @@ ipcMain.handle('delete-rows', async (event, tableName, filterCols, filterVals) =
     return 'Finished';
 })
 
-ipcMain.handle('upload-rows', async (event, tableName, colNames, rows) => {
-    const sql = `INSERT INTO ${tableName} (${colNames.join(', ')}) VALUES (${Array(colNames.length).fill('?').join(', ')})`
-    await server.upload_rows(sql, rows);
+ipcMain.handle('insert-rows', async (event, tableName, colNames, rows) => {
+    var sql = `INSERT INTO ${tableName} (${colNames.join(', ')}) VALUES (${Array(colNames.length).fill('?').join(', ')})`
+    await server.insert_rows(sql, rows);
     return 'Finished';
 })
 
-ipcMain.handle('upload-file', async (event, host, port, username, password, local, remote) => {
+ipcMain.handle('upload-file', async (event, host, port, username, password, remote) => {
     var server_conf = {
         host: host,
         port: port,
         username: username,
         password: password
     }
-    await server.upload_file(server_conf, local, remote);
+    await server.upload_file(server_conf, remote);
     return 'Finished'
 })
 
-ipcMain.handle('download-file', async (event, host, port, username, password, local, remote) => {
+ipcMain.handle('download-file', async (event, host, port, username, password, remote) => {
     var server_conf = {
         host: host,
         port: port,
         username: username,
         password: password
     }
-    await server.download_file(server_conf, local, remote);
+    await server.download_file(server_conf, remote);
     return 'Finished';
 })
