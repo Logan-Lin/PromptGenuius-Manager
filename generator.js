@@ -105,9 +105,6 @@ function gen_class_panel(class_id, class_name, class_icon, icon_style, childs) {
         <div class="mdui-panel-item class-panel-item">
             <div class="mdui-panel-item-header">
                 <div class="mdui-panel-item-title class-name">${class_name || ''}</div>
-                <div class="mdui-panel-item-summary">
-                    <i class="class-icon ${icon_style}">${class_icon}</i>
-                </div>
                 <div class="mdui-panel-item-summary class-id">${class_id}</div>
                 <i class="mdui-panel-item-arrow mdui-icon material-icons">keyboard_arrow_down</i>
             </div>
@@ -140,8 +137,6 @@ function gen_class_panel(class_id, class_name, class_icon, icon_style, childs) {
 
     var class_id_input = panel_body.find('.class-id-input');
     var class_name_input = panel_body.find('.class-name-input');
-    var class_icon_input = panel_body.find('.class-icon-input');
-    var class_icon_style_input = panel_body.find('.class-icon-style-input');
     var class_icon = panel.find('.class-icon');
     class_id_input.on('input', () => {
         panel.find('.class-id').text(class_id_input.val());
@@ -149,13 +144,6 @@ function gen_class_panel(class_id, class_name, class_icon, icon_style, childs) {
     class_name_input.on('input', () => {
         panel.find('.class-name').text(class_name_input.val());
     });
-    class_icon_input.on('input', () => {
-        class_icon.text(class_icon_input.val());
-    });
-    class_icon_style_input.on('input', () => {
-        class_icon.removeClass();
-        class_icon.addClass(`class-icon ${class_icon_style_input.val()}`)
-    })
 
     let panel_divider = $(`<div class="mdui-typo mdui-m-y-1 panel-divider"> <hr/> </div>`);
     if (childs !== undefined) {

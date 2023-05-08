@@ -27,13 +27,13 @@
             <a class="mdui-typo-headline">PromptGenius Manager</a>
             <div class="mdui-toolbar-spacer"></div>
             <button class="mdui-btn mdui-btn-icon" id="save-cache-btn" mdui-tooltip="{content: 'Save to cache'}">
+                <i class="mdui-icon material-icons">cached</i>
+            </button>
+            <button class="mdui-btn mdui-btn-icon" id="open-file-btn" mdui-tooltip="{content: 'Open file'}">
+                <i class="mdui-icon material-icons">open_in_new</i>
+            </button>
+            <button class="mdui-btn mdui-btn-icon" id="save-file-btn" mdui-tooltip="{content: 'Save DB as'}">
                 <i class="mdui-icon material-icons">save</i>
-            </button>
-            <button class="mdui-btn mdui-btn-icon" id="download-db-btn" mdui-tooltip="{content: 'Download from DB'}">
-                <i class="mdui-icon material-icons">file_download</i>
-            </button>
-            <button class="mdui-btn mdui-btn-icon" id="upload-db-btn" mdui-tooltip="{content: 'Upload changes'}">
-                <i class="mdui-icon material-icons">file_upload</i>
             </button>
         </div>
     </header>
@@ -174,75 +174,6 @@
                     <div class="mdui-panel" id="submit-panel" mdui-panel></div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="mdui-container switch-containers" id="settings-container">
-        <div class="mdui-row mdui-m-y-2">
-            <div class="mdui-card">
-                <div class="mdui-card-content">
-                    <div class="mdui-row">
-                        <div class="mdui-col-xs-8">
-                            <div class="mdui-textfield">
-                                <i class="mdui-icon material-icons">storage</i>
-                                <label class="mdui-textfield-label">Host</label>
-                                <input class="mdui-textfield-input" id="host-input" type="text" />
-                            </div>
-                        </div>
-                        <div class="mdui-col-xs-4">
-                            <div class="mdui-textfield">
-                                <label class="mdui-textfield-label">Port</label>
-                                <input class="mdui-textfield-input" id="port-input" type="text" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mdui-textfield">
-                        <i class="mdui-icon material-icons">perm_media</i>
-                        <label class="mdui-textfield-label">Path to database</label>
-                        <input class="mdui-textfield-input" id="path-input" type="text" />
-                    </div>
-                    <div class="mdui-textfield">
-                        <i class="mdui-icon material-icons">account_circle</i>
-                        <label class="mdui-textfield-label">Username</label>
-                        <input class="mdui-textfield-input" id="username-input" type="text" />
-                    </div>
-                    <div class="mdui-textfield">
-                        <i class="mdui-icon material-icons">lock</i>
-                        <label class="mdui-textfield-label">Password</label>
-                        <input class="mdui-textfield-input" id="password-input" type="password" />
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="mdui-dialog" id="download-confirm-dialog">
-        <div class="mdui-dialog-content">
-            <div class="mdui-row" id="download-confirm-dialog-prompt">
-                Download from DB will discard all changes so far.
-            </div>
-            <div class="mdui-progress mdui-hidden" id="download-confirm-dialog-progress">
-                <div class="mdui-progress-indeterminate"></div>
-            </div>
-        </div>
-        <div class="mdui-dialog-actions">
-            <button class="mdui-btn mdui-ripple" id="download-cancel-btn">cancel</button>
-            <button class="mdui-btn mdui-ripple" id="download-confirm-btn">confirm</button>
-        </div>
-    </div>
-
-    <div class="mdui-dialog" id="upload-confirm-dialog">
-        <div class="mdui-dialog-content">
-            <div class="mdui-row" id="upload-confirm-dialog-prompt">
-                Upload changes will overwrite remote database.
-            </div>
-            <div class="mdui-progress mdui-hidden" id="upload-confirm-dialog-progress">
-                <div class="mdui-progress-indeterminate"></div>
-            </div>
-        </div>
-        <div class="mdui-dialog-actions">
-            <button class="mdui-btn mdui-ripple" id="upload-cancel-btn">cancel</button>
-            <button class="mdui-btn mdui-ripple" id="upload-confirm-btn">confirm</button>
         </div>
     </div>
 

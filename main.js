@@ -62,24 +62,5 @@ ipcMain.handle('insert-rows', async (event, tableName, colNames, rows) => {
     return 'Finished';
 })
 
-ipcMain.handle('upload-file', async (event, host, port, username, password, remote) => {
-    var server_conf = {
-        host: host,
-        port: port,
-        username: username,
-        password: password
-    }
-    await server.upload_file(server_conf, remote);
-    return 'Finished'
-})
-
-ipcMain.handle('download-file', async (event, host, port, username, password, remote) => {
-    var server_conf = {
-        host: host,
-        port: port,
-        username: username,
-        password: password
-    }
-    await server.download_file(server_conf, remote);
-    return 'Finished';
-})
+ipcMain.handle('save-file', server.save_file);
+ipcMain.handle('open-file', server.open_file);

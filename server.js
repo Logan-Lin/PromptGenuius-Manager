@@ -1,5 +1,5 @@
+const { dialog } = require('electron');
 const sqlite3 = require('sqlite3');
-const Client = require('ssh2-sftp-client');
 const fs = require('fs');
 const path = require('path');
 
@@ -15,29 +15,34 @@ function load_db() {
     });
 }
 
-async function download_file(server_conf, remoteFilePath) {
-    const sftp = new Client();
-    try {
-        await sftp.connect(server_conf);
-        await sftp.fastGet(remoteFilePath, local_db_path);
-    } catch (err) {
-        console.error(err.message);
-        throw err;
-    } finally {
-        await sftp.end();
+async function open_file() {
+    const result = await dialog.showOpenDialog({
+        properties: ['openFile']
+    })
+    if (!result.canceled) {
+        const filePath = result.filePaths[0];
+        const fileContent = fs.readFileSync(filePath);
+        fs.writeFileSync(local_db_path, fileContent);
+        load_db();
+        return 'Success';
+    } else {
+        return 'Canceled';
     }
 }
 
-async function upload_file(server_conf, remoteFilePath) {
-    const sftp = new Client();
-    try {
-        await sftp.connect(server_conf);
-        await sftp.put(local_db_path, remoteFilePath);
-    } catch (err) {
-        console.error(err.message);
-        throw err;
-    } finally {
-        await sftp.end();
+async function save_file() {
+    const savePath = await dialog.showSaveDialog({defaultPath: 'PromptGenius.db'});
+    if (!savePath.canceled) {
+        const fileContent = fs.readFileSync(local_db_path);
+        fs.writeFile(savePath.filePath, fileContent, (err) => {
+            if (err) {
+                console.error(err);
+                return err;
+            }
+        })
+        return 'Success';
+    } else {
+        return 'Canceled';
     }
 }
 
@@ -126,7 +131,7 @@ module.exports = {
     count_rows,
     fetch_rows,
     delete_rows,
-    insert_rows: insert_rows,
-    upload_file,
-    download_file
+    insert_rows,
+    open_file,
+    save_file
 };

@@ -118,14 +118,6 @@ async function render_submits_page() {
     })
 }
 
-async function render_settings_page() {
-    $('#host-input').val(localStorage.getItem('host'));
-    $('#port-input').val(localStorage.getItem('port'));
-    $('#path-input').val(localStorage.getItem('path'));
-    $('#username-input').val(localStorage.getItem('username'));
-    $('#password-input').val(localStorage.getItem('password'));
-}
-
 async function clear_all_pages() {
     $('#overview-stat-list').text('');
     $('#languages-row').text('');
@@ -159,7 +151,6 @@ function render_left_drawer() {
     ['Manage Functions', 'functions', 'functions'],
     ['Manage Tools', 'apps', 'tools'],
     ['User Submits', 'file_upload', 'submits'],
-    ['System Settings', 'settings', 'settings']
     ].forEach((item) => {
         var list = $(`
         <li class="mdui-list-item mdui-ripple" container-target="${item[2]}">
@@ -281,14 +272,6 @@ async function save_tools_listener() {
         ['lanCode', 'name', 'desc', 'url', 'icon_src', 'tags'], tools);
 }
 
-async function save_settings_listener() {
-    localStorage.setItem('host', $('#host-input').val());
-    localStorage.setItem('port', $('#port-input').val());
-    localStorage.setItem('path', $('#path-input').val());
-    localStorage.setItem('username', $('#username-input').val());
-    localStorage.setItem('password', $('#password-input').val());
-}
-
 // Render pages.
 window.ipcRenderer.invoke('reload-db').then(() => {
     render_left_drawer();
@@ -312,44 +295,24 @@ $('#save-cache-btn').on('click', () => {
         mdui.snackbar('This page do not contain data to save.');
     }
 });
-$('#download-db-btn').on('click', () => { download_confirm_dialog.open() });
-$('#upload-db-btn').on('click', () => { upload_confirm_dialog.open() });
-
-$('#download-cancel-btn').on('click', () => { download_confirm_dialog.close() });
-$('#download-confirm-btn').on('click', () => {
-    $('#download-confirm-dialog .mdui-dialog-actions').addClass('mdui-invisible');
-    $('#download-confirm-dialog-prompt').addClass('mdui-hidden');
-    $('#download-confirm-dialog-progress').removeClass('mdui-hidden');
-    window.ipcRenderer.invoke('download-file',
-        localStorage.getItem('host'), localStorage.getItem('port'),
-        localStorage.getItem('username'), localStorage.getItem('password'),
-        localStorage.getItem('path')).then(() => {
-            window.ipcRenderer.invoke('reload-db').then(() => {
-                download_confirm_dialog.close();
-                $('#download-confirm-dialog .mdui-dialog-actions').removeClass('mdui-invisible');
-                $('#download-confirm-dialog-prompt').removeClass('mdui-hidden');
-                $('#download-confirm-dialog-progress').addClass('mdui-hidden');
-                switch_displayed_page();
-                downloaded_listener();
-            })
-        })
+$('#open-file-btn').on('click', () => {
+    ipcRenderer.invoke('open-file').then(result => {
+        if (result === 'Success') {
+            mdui.snackbar('Open file success');
+            render_language_selects();
+            switch_displayed_page();
+        }
+    })
 });
-$('#upload-cancel-btn').on('click', () => { upload_confirm_dialog.close() });
-$('#upload-confirm-btn').on('click', () => {
-    $('#upload-confirm-dialog .mdui-dialog-actions').addClass('mdui-hidden');
-    $('#upload-confirm-dialog-prompt').addClass('mdui-hidden');
-    $('#upload-confirm-dialog-progress').removeClass('mdui-hidden');
-    window.ipcRenderer.invoke('upload-file',
-        localStorage.getItem('host'), localStorage.getItem('port'),
-        localStorage.getItem('username'), localStorage.getItem('password'),
-        localStorage.getItem('path')).then(() => {
-            upload_confirm_dialog.close();
-            $('#upload-confirm-dialog .mdui-dialog-actions').removeClass('mdui-hidden');
-            $('#upload-confirm-dialog-prompt').removeClass('mdui-hidden');
-            $('#upload-confirm-dialog-progress').addClass('mdui-hidden');
-            uploaded_listener();
-        })
-})
+$('#save-file-btn').on('click', () => {
+    ipcRenderer.invoke('save-file').then(result => {
+        if (result === 'Success') {
+            mdui.snackbar('Save file success');
+        } else if (result != 'Canceled') {
+            mdui.snackbar(result);
+        }
+    })
+});
 
 $('#add-class-btn').on('click', () => {
     $('#classes-panel').append(gen_class_panel('', '', '', '', undefined));
@@ -360,7 +323,7 @@ $('#add-function-btn').on('click', () => {
     mdui.mutation();
 })
 
-$('#function-search-input').on('input', async () => {
+$('#function-search-input').on('input', () => {
     var search_content = $("#function-search-input").val().toLowerCase();
     var items = $('#function-panel').children('.mdui-panel-item');
     for (let i = 0; i < items.length; i++) {
@@ -377,12 +340,10 @@ $('#function-search-input').on('input', async () => {
         }
 
         if (contains_content) {
-            $(item).show('drop', 300);
+            $(item).show();
         } else {
-            $(item).hide('drop', 300);
+            $(item).hide();
         }
-
-        await new Promise(resolve => setTimeout(resolve, 1));
     }
     mdui.mutation();
 })
