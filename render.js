@@ -257,6 +257,46 @@ async function save_classes_listener() {
         ['ID', 'lanCode', 'name'], class_names);
 }
 
+async function save_functions_listener() {
+    var functions = [];
+    var function_names = [];
+    var prompts = [];
+    $('#function-panel').children('.mdui-panel-item').each((index, item) => {
+        var function_id = $(item).find('.function-id-input').val();
+        var function_name = $(item).find('.function-name-input').val();
+        var function_classes = [];
+        $(item).find('.class-tag-chip').each((index, chip) => { function_classes.push($(chip).attr('class-id')) });
+        function_classes = function_classes.join(',');
+
+        functions.push([function_id, function_classes]);
+        function_names.push([function_id, lan_code, function_name]);
+
+        $(item).find('.prompt-panel').children('.mdui-panel-item').each((index, p_item) => {
+            var prompt_id = $(p_item).find('.prompt-id-input').val();
+            var prompt_priority = $(p_item).find('.prompt-priority-input').val();
+            var prompt_chat = $(p_item).find('.prompt-chat-input').val();
+            var prompt_count = $(p_item).find('.prompt-count-input').val();
+            var propmt_model = $(p_item).find('.prompt-model-input').val();
+            var prompt_author = $(p_item).find('.prompt-author-input').val();
+            var prompt_author_link = $(p_item).find('.prompt-author-link-input').val();
+            var prompt_content = $(p_item).find('.prompt-content-input').val();
+
+            prompts.push([function_id, prompt_id, lan_code, prompt_priority,
+                propmt_model, prompt_content, prompt_author, prompt_author_link,
+                prompt_chat, prompt_count]);
+        });
+    });
+
+    await ipcRenderer.invoke('delete-rows', 'functions');
+    await ipcRenderer.invoke('insert-rows', 'functions', ['ID', 'classes'], functions);
+    await ipcRenderer.invoke('delete-rows', 'function_names', ['lanCode'], [lan_code]);
+    await ipcRenderer.invoke('insert-rows', 'function_names', ['ID', 'lanCode', 'name'], function_names);
+    await ipcRenderer.invoke('delete-rows', 'function_prompts', ['lanCode'], [lan_code]);
+    await ipcRenderer.invoke('insert-rows', 'function_prompts',
+        ['functionID', 'semanticID', 'lanCode', 'priority', 'model', 'content', 'author', 'author_link', 'chat', 'copied_count'],
+        prompts);
+}
+
 async function save_tools_listener() {
     var tools = [];
     $('#tools-panel .tool-panel-item').each((index, item) => {

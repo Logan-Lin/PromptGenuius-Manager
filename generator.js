@@ -185,7 +185,7 @@ function gen_class_tag_chip(class_id, class_name) {
     return class_chip;
 }
 
-function gen_prompt_panel(prompt_id, priority, model, content, author, author_link) {
+function gen_prompt_panel(prompt_id, priority, model, content, author, author_link, chat, copied_count) {
     var panel = $(`
         <div class="mdui-panel-item mdui-color-amber-100">
             <div class="mdui-panel-item-header">
@@ -203,11 +203,19 @@ function gen_prompt_panel(prompt_id, priority, model, content, author, author_li
     var panel_body = $(`
         <div class="mdui-panel-item-body prompt-panel-body">
             <div class="mdui-row">
-                <div class="mdui-col-xs-2">
+                <div class="mdui-col-xs-12">
+                    <input class="mdui-textfield-input prompt-id-input" type="text" value="${prompt_id}" placeholder="semantic ID"/>
+                </div>
+            </div>
+            <div class="mdui-row">
+                <div class="mdui-col-xs-4">
                     <input class="mdui-textfield-input prompt-priority-input" type="number" value="${priority}" placeholder="rank"/>
                 </div>
-                <div class="mdui-col-xs-10">
-                    <input class="mdui-textfield-input prompt-id-input" type="text" value="${prompt_id}" placeholder="semantic ID"/>
+                <div class="mdui-col-xs-4">
+                    <input class="mdui-textfield-input prompt-chat-input" type="text" value="${chat}" placeholder="chat"/>
+                </div>
+                <div class="mdui-col-xs-4">
+                    <input class="mdui-textfield-input prompt-count-input" type="number" value="${copied_count}" placeholder="copied count"/>
                 </div>
             </div>
             <div class="mdui-row">
@@ -350,8 +358,8 @@ function gen_function_panel(function_id, function_name, class_tags) {
     `).sortable();
     window.ipcRenderer.invoke('fetch-rows', 'function_prompts', undefined,
         ['lanCode', 'functionID'], [lan_code, function_id]).then((prompts) => {
-            prompts.forEach(({ semanticID, priority, model, content, author, author_link }) => {
-                prompt_panels.append(gen_prompt_panel(semanticID, priority, model, content, author, author_link));
+            prompts.forEach(({ semanticID, priority, model, content, author, author_link, chat, copied_count }) => {
+                prompt_panels.append(gen_prompt_panel(semanticID, priority, model, content, author, author_link, chat, copied_count));
             })
         })
     panel_body.append(prompt_panels);
@@ -364,7 +372,7 @@ function gen_function_panel(function_id, function_name, class_tags) {
         panel.remove();
     });
     prompt_add_btn.on('click', () => {
-        prompt_panels.append(gen_prompt_panel('', 0, '', '', '', ''));
+        prompt_panels.append(gen_prompt_panel('', 0, '', '', '', '', '', ''));
     })
 
     return panel;
