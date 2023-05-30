@@ -1,9 +1,12 @@
 <h1 align="center">
     PromptGenius Manager
 </h1>
+<span style="color: red">Warning: this manager is deprecated and this project will not receive further updates. There is a embedded editing system in developing that is much more easier to use and will be released in the future.</span>
+
 <p align="center">
     <em>GUI for managing PromptGenius Database</em> | <a href="https://github.com/wenhaomin/PromptGenius">PromptGenius</a>
 </p>
+
 
 ![image](instance/PGManager.png)
 
